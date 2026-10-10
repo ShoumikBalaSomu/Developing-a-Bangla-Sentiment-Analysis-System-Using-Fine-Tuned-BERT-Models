@@ -1,0 +1,4 @@
+group,models,best_macro_f1,mean_macro_f1,best_accuracy
+Bangla-specific,"bangla_bert_base, banglabert, banglishbert",0.6065,0.5952,0.83
+Multilingual,"mbert, xlmr",0.5843,0.5802,0.7968
+Classical,tfidf_logreg,0.6341,0.6341,0.8854

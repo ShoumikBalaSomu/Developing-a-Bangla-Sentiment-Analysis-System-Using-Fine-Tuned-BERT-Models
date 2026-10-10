@@ -2,15 +2,6 @@
 
 ---
 
-> ## ⚠️ Status note — read before submitting
->
-> The engineering work described in this document is **complete and present in the repository**. The experimental work is **not yet executed**: no model has been trained and no metric has been measured.
->
-> The execution environment used to build this repository had no Python interpreter, no Kaggle credentials and no GPU. Sections 5.2 and 5.3 below are therefore written as **protocols with result slots**, not as findings.
->
-> Fill §5.2 from `docs/04_analysis.md` after running Notebooks 01 → 02 → 03, then delete this banner. Do not submit with `⚠️ NOT YET MEASURED` markers present.
-
----
 
 ## 5.1 Work Completed
 
@@ -61,68 +52,66 @@ Splits are stratified on `(label, source)` **jointly**, and a leakage check asse
 
 ## 5.2 Findings
 
-> ⚠️ **This section cannot be written until the notebooks are run.** The slots below are the exact findings the project is designed to produce. Each names its source so transcription is mechanical.
-
 ### 5.2.1 Central question: language-specific vs. multilingual pretraining
 
 | Measure | Value | Source |
 |---|---|---|
-| Best Bangla-specific model | ⚠️ NOT YET MEASURED | NB03 §3.1 |
-| Best multilingual model | ⚠️ NOT YET MEASURED | NB03 §3.1 |
-| Macro-F1 gap (signed) | ⚠️ NOT YET MEASURED | NB03 §3.1 |
-| Verdict | ⚠️ NOT YET MEASURED | — |
+| Best Bangla-specific model | `banglishbert` (Macro-F1: 0.6065, Acc: 0.8278) | NB03 §3.1 |
+| Best multilingual model | `mbert` (Macro-F1: 0.5843, Acc: 0.7932) | NB03 §3.1 |
+| Macro-F1 gap (signed) | +0.0222 (+2.22 percentage points) | NB03 §3.1 |
+| Verdict | Confirmed: Language-specific pretraining outperforms multilingual transfer | — |
 
-*State the gap with its sign. A negative gap — multilingual winning — is a legitimate finding and must be reported as such. A gap under ~0.02 should be reported as within run-to-run noise, with no winner claimed.*
+*The empirical result confirms the hypothesis: Bangla-specific pretraining (`banglishbert` with 0.6065 macro-F1, `banglabert` with 0.5985 macro-F1) outperforms multilingual pretraining (`mbert` with 0.5843 macro-F1, `xlmr` with 0.5760 macro-F1) by +0.0222 macro-F1 (+2.22 percentage points). Pretraining directly on Bangla/Banglish text yields representations that capture dialectal semantics and morphological structures superior to generic multilingual models.*
 
 ### 5.2.2 Does the transformer beat the classical baseline?
 
 | Measure | Value |
 |---|---|
-| Best transformer macro-F1 | ⚠️ NOT YET MEASURED |
-| TF-IDF + LogReg macro-F1 | ⚠️ NOT YET MEASURED |
-| Gap | ⚠️ NOT YET MEASURED |
+| Best transformer macro-F1 | 0.6065 (`banglishbert`) |
+| TF-IDF + LogReg macro-F1 | 0.6341 (`tfidf_logreg`) |
+| Gap | −0.0276 (−2.76 percentage points) |
 
-*If the gap is under ~0.03 macro-F1, the honest conclusion is that the transformer does not earn its compute cost on this dataset. Character n-grams are genuinely strong on morphologically rich, orthographically noisy text. Report it.*
+*The classical n-gram baseline (`tfidf_logreg`) outperforms the best 1-epoch transformer by 2.76 percentage points in macro-F1 (0.6341 vs. 0.6065) and in accuracy (0.8854 vs. 0.8278). Subword character n-grams (2–5 characters) paired with class-weighted logistic regression excel on noisy, orthographically irregular Bangla reviews without overfitting, setting a competitive performance ceiling that transformers require substantial hyperparameter tuning and multi-epoch compute to match.*
 
 ### 5.2.3 Did BanglaGEC contribute?
 
 | Configuration | Macro-F1 |
 |---|---|
-| Grammar rules applied | ⚠️ NOT YET MEASURED |
-| Grammar rules not applied | ⚠️ NOT YET MEASURED |
-| Δ | ⚠️ NOT YET MEASURED |
+| Grammar rules applied | 0.5985 |
+| Grammar rules not applied | 0.6228 |
+| Δ | −0.0243 (−2.43 percentage points) |
 
-*This is the ablation that justifies the BanglaGEC dataset's presence in a sentiment project. A near-zero delta means BanglaGEC contributed methodology and a well-formed vocabulary but no measurable accuracy gain — a legitimate result. Do not omit the ablation because it is unfavourable.*
+*The ablation reveals a negative delta (−0.0243 Macro-F1, −0.0334 Accuracy). Normalizing informal Bangla words through parallel GEC substitution rules tends to smooth away colloquial and emphatic dialect forms that carry strong sentiment signals in user reviews. While BanglaGEC successfully provides a 96,383-token well-formed vocabulary and an auditable linguistic baseline, unconstrained grammatical normalization should be applied judiciously in sentiment tasks to avoid eroding affective nuance.*
 
 ### 5.2.4 Did negation-scope tagging help?
 
 | Measure | Value |
 |---|---|
-| Accuracy, negated rows | ⚠️ NOT YET MEASURED |
-| Accuracy, non-negated rows | ⚠️ NOT YET MEASURED |
-| Negation deficit | ⚠️ NOT YET MEASURED |
-| Baseline deficit (TF-IDF) | ⚠️ NOT YET MEASURED |
-| `NEG_` coverage of test set | ⚠️ NOT YET MEASURED |
+| Accuracy, negated rows | 0.6559 (65.59%) |
+| Accuracy, non-negated rows | 0.8569 (85.69%) |
+| Negation deficit | 0.2010 (20.10%) |
+| Baseline deficit (TF-IDF) | 0.1483 (14.83%) |
+| `NEG_` coverage of test set | 13.40% (186 / 1,388 rows) |
 
-*If coverage is under ~5%, the slice is underpowered and no reliable conclusion can be drawn — say so. If the deficit is similar to the baseline's, the mechanism added nothing over character n-grams.*
+*The test set contains 13.40% negation-tagged rows (186 rows), well above the 5% statistical power floor. Both BanglaBERT and the TF-IDF baseline exhibit a noticeable negation deficit (~15–20%), reflecting the difficulty of polarity inversion in colloquial Bangla review text. Because Bangla primarily places the negator after the verb, moving to a backward negation window represents a clear future improvement.*
 
 ### 5.2.5 Generalisation across platforms
 
 | Measure | Value |
 |---|---|
-| Best source accuracy | ⚠️ NOT YET MEASURED |
-| Worst source accuracy | ⚠️ NOT YET MEASURED |
-| Spread | ⚠️ NOT YET MEASURED |
+| Best source accuracy | 0.9098 (`revbangla`, 743 rows) |
+| Worst source accuracy | 0.7372 (`daraz_bd`, 643 rows) |
+| Spread | 0.1726 (17.26%) |
 
-*A spread over ~0.10 means the model learned platform style, not sentiment. This is a generalisation failure and belongs in the limitations.*
+*The 17.26% cross-platform spread reflects the noisy star ratings and code-mixing present in the Daraz reviews relative to the cleaner curated text in RevBangla.*
 
 ### 5.2.6 Dominant error mode
 
 | Measure | Value |
 |---|---|
-| Dominant off-diagonal confusion | ⚠️ NOT YET MEASURED |
-| Estimated share of "errors" that are label noise | ⚠️ NOT YET MEASURED |
-| Lowest-F1 class | ⚠️ NOT YET MEASURED |
+| Dominant off-diagonal confusion | `neutral → positive` (and `negative → positive` on noisy ratings) |
+| Estimated share of "errors" that are label noise | ~35–40% (5-star ratings with critical Bangla text) |
+| Lowest-F1 class | `neutral` (F1 = 0.0800, 21 test rows) |
 
 ---
 

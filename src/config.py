@@ -133,7 +133,7 @@ DATASETS = {
 # Column-name candidates: Kaggle uploaders spell things inconsistently, so the
 # loader tries each candidate in order instead of hard-failing.
 TEXT_COL_CANDIDATES = ["Comment", "comment", "review", "Review", "reviewText",
-                       "text", "Text", "content", "sentence", "body"]
+                       "review_text", "Review_text", "text", "Text", "content", "sentence", "body"]
 LABEL_COL_CANDIDATES = ["Label_Sentiment", "Sentiment", "sentiment", "Label",
                         "label", "rating", "Rating", "stars", "class"]
 
@@ -201,8 +201,9 @@ NEGATION_SEEDS = [
 # Training
 # --------------------------------------------------------------------------
 TRAIN = {
-    "batch_size": 16,
-    "eval_batch_size": 32,
+    "batch_size": 8,
+    "gradient_accumulation_steps": 2,
+    "eval_batch_size": 16,
     "learning_rate": 2e-5,
     "head_learning_rate": 6e-5,      # discriminative LR for the classifier head
     "epochs": 4,

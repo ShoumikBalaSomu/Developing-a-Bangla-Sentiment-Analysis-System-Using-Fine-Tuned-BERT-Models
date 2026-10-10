@@ -76,6 +76,9 @@ def predict_proba(model_key: str, df: pd.DataFrame) -> np.ndarray:
                         padding=True, return_tensors="pt").to(device)
             logits = model(**batch).logits
             probs.append(torch.softmax(logits, dim=-1).cpu().numpy())
+    del model, tok
+    import gc
+    gc.collect()
     return np.vstack(probs)
 
 
@@ -164,7 +167,9 @@ def plot_roc(y_true, y_proba, name: str, path: Path) -> None:
 def plot_grouped_bars(df: pd.DataFrame, metric: str, title: str, path: Path) -> None:
     import matplotlib.pyplot as plt
 
-    d = df.sort_values(metric, ascending=False)
+    d = df.dropna(subset=["model"]).copy()
+    d["model"] = d["model"].astype(str)
+    d = d.sort_values(metric, ascending=False)
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.bar(d["model"], d[metric], color="#4C72B0", edgecolor="black", linewidth=0.6)
     ax.set_ylabel(metric)
@@ -296,12 +301,22 @@ def evaluate_all(model_keys: list[str], baseline: bool = True) -> pd.DataFrame:
             encoding="utf-8")
 
     table = pd.DataFrame(rows)
+    metrics_path = Path(ARTIFACTS["metrics"])
+    if metrics_path.exists():
+        old_table = pd.read_csv(metrics_path)
+        if "model_key" in old_table.columns and "model" in old_table.columns:
+            old_table["model"] = old_table["model"].fillna(old_table["model_key"])
+        old_table = old_table.dropna(subset=["model"])
+        new_models = set(table["model"])
+        old_table = old_table[~old_table["model"].isin(new_models)]
+        table = pd.concat([old_table, table], ignore_index=True)
+
     if table.empty:
         print("\n[!] Nothing evaluated. Train a model first:  python src/train.py --model banglabert")
         return table
 
     table = table.sort_values("macro_f1", ascending=False).reset_index(drop=True)
-    table.to_csv(ARTIFACTS["metrics"], index=False)
+    table.to_csv(metrics_path, index=False)
     print(banner("Metric summary (sorted by macro-F1)"))
     show = ["model", "accuracy", "balanced_accuracy", "macro_f1", "weighted_f1", "mcc"]
     show = [c for c in show if c in table.columns]

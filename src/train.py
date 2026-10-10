@@ -178,7 +178,7 @@ def tokenise(df_train, df_val, df_test, tokenizer, max_len: int):
 
     def enc(batch):
         out = tokenizer(batch["text"], truncation=True, max_length=max_len,
-                        padding="max_length")
+                        padding=False)
         out["labels"] = batch["label"]
         return out
 
@@ -195,19 +195,22 @@ def tokenise(df_train, df_val, df_test, tokenizer, max_len: int):
 # --------------------------------------------------------------------------
 # Training
 # --------------------------------------------------------------------------
-def _training_arguments(out_dir: Path, epochs: int, fp16_ok: bool):
-    """Build TrainingArguments, tolerating the eval_strategy rename that landed
-    in transformers 4.41 (evaluation_strategy -> eval_strategy)."""
+def _training_arguments(out_dir: Path, epochs: int, fp16_ok: bool, n_train: int = 1000):
+    """Build TrainingArguments, tolerating transformers 4 vs 5 differences."""
+    import inspect
     from transformers import TrainingArguments
+
+    sig = inspect.signature(TrainingArguments.__init__)
+    params = sig.parameters
 
     common = dict(
         output_dir=str(out_dir),
         num_train_epochs=epochs,
         per_device_train_batch_size=TRAIN["batch_size"],
+        gradient_accumulation_steps=TRAIN.get("gradient_accumulation_steps", 1),
         per_device_eval_batch_size=TRAIN["eval_batch_size"],
         learning_rate=TRAIN["learning_rate"],
         weight_decay=TRAIN["weight_decay"],
-        warmup_ratio=TRAIN["warmup_ratio"],
         max_grad_norm=TRAIN["max_grad_norm"],
         fp16=fp16_ok,
         save_strategy="epoch",
@@ -220,10 +223,18 @@ def _training_arguments(out_dir: Path, epochs: int, fp16_ok: bool):
         report_to=TRAIN["report_to"],
         dataloader_num_workers=0,   # keeps Colab disk/RAM usage bounded
     )
-    try:
-        return TrainingArguments(eval_strategy="epoch", **common)
-    except TypeError:
-        return TrainingArguments(evaluation_strategy="epoch", **common)
+    if "warmup_ratio" in params:
+        common["warmup_ratio"] = TRAIN["warmup_ratio"]
+    else:
+        steps_per_epoch = max(1, n_train // TRAIN["batch_size"])
+        common["warmup_steps"] = max(1, int(steps_per_epoch * epochs * TRAIN["warmup_ratio"]))
+
+    if "eval_strategy" in params:
+        common["eval_strategy"] = "epoch"
+    else:
+        common["evaluation_strategy"] = "epoch"
+
+    return TrainingArguments(**common)
 
 
 def train_one(model_key: str, epochs: int | None = None,
@@ -252,7 +263,8 @@ def train_one(model_key: str, epochs: int | None = None,
 
     out_dir = CHECKPOINT_DIR / model_key.replace("/", "__")
     args = _training_arguments(out_dir, epochs,
-                               TRAIN["fp16"] and torch.cuda.is_available())
+                               TRAIN["fp16"] and torch.cuda.is_available(),
+                               len(df_train))
 
     # Discriminative LR is applied via an explicit optimizer so that the head
     # and the backbone are not forced to share one learning rate.
@@ -298,16 +310,22 @@ def train_one(model_key: str, epochs: int | None = None,
                                           encoding="utf-8")
     print(json.dumps({k: v for k, v in flat.items()
                       if isinstance(v, (int, float, str))}, indent=2, default=str))
+    del trainer, model
+    import gc
+    gc.collect()
     return flat
 
 
 def append_metrics(flat: dict) -> None:
     """Accumulate per-model results into results/metrics_all_models.csv."""
     path = Path(ARTIFACTS["metrics"])
+    flat["model"] = flat.get("model", flat.get("model_key"))
     row = pd.DataFrame([flat])
     if path.exists():
         old = pd.read_csv(path)
-        old = old[old["model_key"] != flat["model_key"]]
+        key_col = "model_key" if "model_key" in old.columns else ("model" if "model" in old.columns else None)
+        if key_col:
+            old = old[old[key_col] != flat.get("model_key", flat.get("model"))]
         row = pd.concat([old, row], ignore_index=True)
     row.to_csv(path, index=False)
     print(f"  [metrics] appended -> {path}")

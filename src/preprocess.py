@@ -136,9 +136,9 @@ def mine_grammar_rules(sample: int) -> pd.DataFrame:
         return pd.DataFrame(columns=["source_token", "target_token", "support",
                                      "rule_type", "example"])
 
-    src_col = _pick_column(df, ["source", "src", "incorrect", "input"],
+    src_col = _pick_column(df, ["source", "src", "incorrect", "input", "erroneous", "Erroneous"],
                            DATASETS["banglagec"]["columns"]["src"])
-    tgt_col = _pick_column(df, ["target", "tgt", "correct", "output"],
+    tgt_col = _pick_column(df, ["target", "tgt", "correct", "output", "Correct"],
                            DATASETS["banglagec"]["columns"]["tgt"])
     if not src_col or not tgt_col:
         print(f"  [rules] could not find source/target columns in {list(df.columns)}")
@@ -371,8 +371,10 @@ def tag_negation(text: str, negators: set[str], window: int | None = None) -> st
 _WORD_LABEL_MAP = {
     "positive": "positive", "pos": "positive", "1": "positive",
     "সকারাত্মক": "positive", "পজিটিভ": "positive",
+    "happy": "positive", "funny": "positive",
     "negative": "negative", "neg": "negative", "0": "negative",
     "নেতিবাচক": "negative", "নেগেটিভ": "negative",
+    "sad": "negative", "toxic": "negative",
     "neutral": "neutral", "neu": "neutral", "mixed": "neutral", "2": "neutral",
     "নিরপেক্ষ": "neutral",
 }

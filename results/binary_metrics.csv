@@ -1,0 +1,7 @@
+model,bin_acc,bin_f1
+tfidf_logreg,0.9027,0.8836
+banglabert,0.8977,0.8808
+bangla_bert_base,0.889,0.8644
+banglishbert,0.8984,0.8767
+mbert,0.8782,0.8515
+xlmr,0.8703,0.84

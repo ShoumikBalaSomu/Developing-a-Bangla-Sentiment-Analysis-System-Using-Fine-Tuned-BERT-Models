@@ -17,6 +17,7 @@ dataset/preprocessed/*
 *.parquet
 *.zip
 *.tar.gz
+!dataset/preprocessed/data_manifest.csv
 
 # ---- Model artefacts ----
 checkpoints/
@@ -33,9 +34,12 @@ runs/
 # figures committed, since the grader will not run your GPU jobs:
 # comment out the three lines below, then `git add results/`.
 # See results/README.md for the trade-off.
-results/*.png
-results/*.csv
-results/*.json
+# results/*.png
+# results/*.csv
+# results/*.json
+!results/*.csv
+!results/*.png
+!results/*.json
 !results/README.md
 !results/.gitkeep
 
@@ -49,6 +53,9 @@ env/
 .ipynb_checkpoints/
 .pytest_cache/
 .mypy_cache/
+
+# ---- Logs ----
+*.log
 
 # ---- OS / editor ----
 .DS_Store

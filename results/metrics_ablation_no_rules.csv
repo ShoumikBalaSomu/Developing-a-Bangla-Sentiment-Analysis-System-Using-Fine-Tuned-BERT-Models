@@ -1,0 +1,2 @@
+model,accuracy,balanced_accuracy,macro_f1,weighted_f1,mcc,precision_negative,recall_negative,f1_negative,support_negative,precision_neutral,recall_neutral,f1_neutral,support_neutral,precision_positive,recall_positive,f1_positive,support_positive,macro_auc
+banglabert_no_rules,0.8634393063583815,0.6771378399282307,0.6227558225021466,0.8871122108873745,0.7197804365809705,0.8252427184466019,0.8740359897172236,0.8489388264669163,389,0.06060606060606061,0.2857142857142857,0.1,21,0.9725085910652921,0.8716632443531828,0.9193286410395235,974,0.8578904228999064
