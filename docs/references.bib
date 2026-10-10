@@ -1,0 +1,255 @@
+% ==========================================================================
+%  References — Developing a Bangla Sentiment Analysis System
+%                   Using Fine-Tuned BERT Models
+%  CSE432 — Natural Language Processing
+%  Shoumik Bala Somu (232-15-657) | Raisha Khan Raka (232-15-644)
+%
+%  Only sources that were actually verified during this project are listed.
+%  No placeholder or fabricated entries.
+% ==========================================================================
+
+
+% --------------------------------------------------------------------------
+%  Pretrained Bangla language models
+% --------------------------------------------------------------------------
+
+@article{bhattacharjee2021banglabert,
+  title   = {BanglaBERT: Language Model Pretraining and Benchmarks for
+             Low-Resource Language Understanding Evaluation in Bangla},
+  author  = {Bhattacharjee, Abhik and Samin, Kazi and Islam, Md Saiful and
+             Rahman, Anindya and Rahman, M. Sohel},
+  journal = {arXiv preprint arXiv:2101.00204},
+  year    = {2021},
+  note    = {Pretrained on Bangla2B+, a 27.5 GB Bangla corpus crawled from
+             eleven sources. Checkpoint: csebuetnlp/banglabert (ELECTRA
+             discriminator).}
+}
+
+@inproceedings{kowsher2022banglabert,
+  title     = {Bangla-BERT: Transformer-Based Efficient Model for Sentiment
+               Analysis and Language Understanding},
+  author    = {Kowsher, Md. and others},
+  booktitle = {IEEE},
+  year      = {2022},
+  note      = {Checkpoint: sagorsarker/bangla-bert-base. bert-base-uncased
+               architecture: 12 layers, 768 hidden, 12 heads, ~110M
+               parameters, trained for 1 million steps.}
+}
+
+@misc{csebuetnlp_banglishbert,
+  title        = {BanglishBERT: ELECTRA discriminator for Bangla-English
+                  code-mixed text},
+  author       = {{CSE BUET NLP Lab}},
+  howpublished = {\url{https://huggingface.co/csebuetnlp/banglishbert}},
+  year         = {2021},
+  note         = {Hugging Face model hub}
+}
+
+@inproceedings{devlin2019bert,
+  title     = {BERT: Pre-training of Deep Bidirectional Transformers for
+               Language Understanding},
+  author    = {Devlin, Jacob and Chang, Ming-Wei and Lee, Kenton and
+               Toutanova, Kristina},
+  booktitle = {Proceedings of NAACL-HLT},
+  year      = {2019}
+}
+
+@inproceedings{clark2020electra,
+  title     = {ELECTRA: Pre-training Text Encoders as Discriminators Rather
+               Than Generators},
+  author    = {Clark, Kevin and Luong, Minh-Thang and Le, Quoc V. and
+               Manning, Christopher D.},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2020}
+}
+
+@inproceedings{conneau2020xlmr,
+  title     = {Unsupervised Cross-lingual Representation Learning at Scale},
+  author    = {Conneau, Alexis and Khandelwal, Kartikay and Goyal, Naman and
+               Chaudhary, Vishrav and Wenzek, Guillaume and Guzm{\'a}n,
+               Francisco and Grave, Edouard and Ott, Myle and Zettlemoyer,
+               Luke and Stoyanov, Veselin},
+  booktitle = {Proceedings of ACL},
+  year      = {2020},
+  note      = {XLM-RoBERTa}
+}
+
+
+% --------------------------------------------------------------------------
+%  Bangla sentiment analysis
+% --------------------------------------------------------------------------
+
+@article{chakma2023lowresource,
+  title   = {LowResource at BLP-2023 Task 2: Leveraging BanglaBert for Low
+             Resource Sentiment Analysis of Bangla Language},
+  author  = {Chakma, Aunabil and Hasan, Masum},
+  journal = {CoRR},
+  volume  = {abs/2311.12735},
+  year    = {2023}
+}
+
+@article{shamael2024banglishrev,
+  title   = {BanglishRev: A Large-Scale Bangla-English and Code-Mixed Product
+             Review Dataset for Sentiment Analysis},
+  author  = {Shamael, Md. Nafis and others},
+  journal = {arXiv preprint arXiv:2412.13161},
+  year    = {2024},
+  note    = {1.74 million written reviews from 3.2 million ratings, 128k
+             products. Largest Bangla-English code-mixed review dataset
+             reported to date.}
+}
+
+@article{rashid2024daraz,
+  title   = {A comprehensive dataset for sentiment and emotion classification
+             from Bangladesh e-commerce reviews},
+  author  = {Rashid, Md. Rakibul and others},
+  journal = {Data in Brief},
+  year    = {2024},
+  note    = {78,130 product reviews from Daraz and Pickaboo across 152
+             product categories; 28,912 Bangla and 49,218 English reviews.}
+}
+
+@inproceedings{banemo2026,
+  title     = {BANEmo: A Bangla Language Dataset for Sentiment Analysis},
+  author    = {{IEEE authors}},
+  booktitle = {IEEE},
+  year      = {2026},
+  note      = {15,000 comments harvested from social media and newspapers,
+               each labelled for sentiment.}
+}
+
+@article{alam2021review,
+  title   = {A Review of Bangla Natural Language Processing Tasks and the
+             Utility of Transformer Models},
+  author  = {Alam, Firoj and others},
+  journal = {arXiv preprint arXiv:2107.03844},
+  year    = {2021}
+}
+
+@inproceedings{rejuan2025bangla,
+  title     = {A machine and DL approach for classifying customer sentiments
+               from online shopping reviews in Bangla text},
+  author    = {Rejuan, Md. Arifur Rahman and Assaduzzaman, Md. and Fahad, Nafiz
+               and Hossen, Md. Jakir and Sarker, Md. Rahmatul Kabir Rasel},
+  booktitle = {Zenodo},
+  year      = {2025}
+}
+
+@article{opinionmining2023,
+  title   = {Opinion mining from machine translated Bangla reviews with
+             stacked contractive auto-encoders},
+  journal = {Journal of Ambient Intelligence and Humanized Computing},
+  year    = {2023},
+  note    = {Reports that prior Bangla opinion-mining methods achieved
+             limited performance.}
+}
+
+@article{banglaaste2025,
+  title   = {BanglaASTE: A Novel Framework for Aspect-Sentiment-Opinion
+             Extraction in Bangla E-commerce Reviews Using Ensemble Deep
+             Learning},
+  journal = {arXiv preprint arXiv:2511.21381},
+  year    = {2025},
+  note    = {Aspect-based triplet extraction rather than document-level
+             polarity. Relevant to future work in this project.}
+}
+
+
+% --------------------------------------------------------------------------
+%  Bangla grammatical error correction (BanglaGEC)
+% --------------------------------------------------------------------------
+
+@misc{banglagec_dataset,
+  title        = {BanglaGEC: Bangla Grammatical Error Correction},
+  author       = {nahid-hub},
+  howpublished = {\url{https://www.kaggle.com/datasets/nahidhub/banglagec}},
+  note         = {Large-scale parallel corpus of ~7,074,425 sentence pairs.
+                  Splits: train 5,730,275 / validation 636,702 /
+                  test 707,448 rows. Mirrored at
+                  \url{https://huggingface.co/datasets/nahid-hub/BanglaGEC}.}
+}
+
+@article{bhattacharyya2024gec,
+  title   = {Leveraging LLMs for Bangla Grammar Error Correction: Error
+             Categorization, Synthetic Data, and Model Evaluation},
+  author  = {Bhattacharyya, Pramit and Bhattacharya, Arnab},
+  journal = {arXiv preprint arXiv:2406.14284},
+  year    = {2024},
+  note    = {Categorises 12 Bangla error types.}
+}
+
+@article{banglaged2024,
+  title   = {Bangla Grammatical Error Detection Leveraging Transformer-based
+             Token Classification},
+  journal = {arXiv preprint arXiv:2411.08344},
+  year    = {2024}
+}
+
+
+% --------------------------------------------------------------------------
+%  Supporting resource datasets used by this project
+% --------------------------------------------------------------------------
+
+@misc{bangla_nlp_words,
+  title        = {Bangla NLP words},
+  author       = {saifsunny},
+  howpublished = {\url{https://www.kaggle.com/datasets/saifsunny/bangla-nlp-words}},
+  note         = {Compilation of essential Bangla grammatical elements for
+                  NLP. Supplies the negation lexicon and stopwords used in
+                  this project.}
+}
+
+@misc{bangla_nlp_catalog,
+  title        = {Bangla NLP Catalog},
+  author       = {Morol, Md Kishor},
+  howpublished = {\url{https://www.kaggle.com/datasets/kishormorol/bangla-nlp-catalog}},
+  note         = {Machine-readable catalog of Bangla NLP resources: 813
+                  papers, 63 datasets, 20 models and 9 tools across 26
+                  tasks. Mirrored at
+                  \url{https://huggingface.co/datasets/kishormorol/bangla-nlp-catalog}.
+                  Upstream project: BanglaNLP-Hub.}
+}
+
+@misc{revbangla,
+  title        = {RevBangla: Bangla Product Sentiment Analysis Dataset},
+  author       = {saifsunny},
+  howpublished = {\url{https://www.kaggle.com/datasets/saifsunny/revbangla}},
+  note         = {Bangla e-commerce product comments with a Label\_Sentiment
+                  column. Also published on Mendeley Data
+                  (doi:10.17632/bnbbcdsf4m).}
+}
+
+@misc{largesentimentdata,
+  title        = {Large Sentiment Analysis Bangla Dataset},
+  author       = {tahmidmir},
+  howpublished = {\url{https://www.kaggle.com/datasets/tahmidmir/largesentimentdata}},
+  note         = {Positive, negative and neutral Bangla comments from
+                  Twitter, YouTube and Google. Columns: Platform, Comment,
+                  Sentiment, Label.}
+}
+
+@misc{daraz_bd_reviews,
+  title        = {Bangladesh Daraz Reviews for Sentiment Analysis},
+  author       = {robiulhasanjisan},
+  howpublished = {\url{https://www.kaggle.com/datasets/robiulhasanjisan/bangladesh-daraz-reviews-for-sentiment-analysis}},
+  note         = {Daraz Bangladesh product reviews, labelled by star rating.}
+}
+
+@misc{banglasenti,
+  title        = {BanglaSenti: A Dataset of Bangla Words for Sentiment Analysis},
+  author       = {fahad35},
+  howpublished = {\url{https://github.com/fahad35/BanglaSenti-A-Dataset-of-Bangla-Words-for-Sentiment-Analysis}},
+  note         = {61,582 Bangla words labelled positive, negative and
+                  neutral. Not used in this project; documented as the
+                  lexicon-based alternative.}
+}
+
+@misc{anubhuti2025,
+  title   = {ANUBHUTI: A Comprehensive Corpus for Sentiment Analysis in
+             Bangla Regional Languages},
+  journal = {arXiv preprint arXiv:2506.21686},
+  year    = {2025},
+  note    = {10,000 sentences translated into Mymensingh, Noakhali, Sylhet
+             and Chittagong dialects. Cited as future work on dialect
+             coverage.}
+}
