@@ -1,0 +1,28 @@
+# Normalise line endings so the repo behaves identically on Windows, macOS and
+# Linux, and so Colab (Linux) never sees CRLF in a .ipynb or .py file.
+* text=auto eol=lf
+
+# Binary — never touch line endings or attempt text diffs
+*.docx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.zip  binary
+*.bin  binary
+*.safetensors binary
+
+# Notebooks are JSON. Keep them LF so Colab diffs cleanly, and collapse
+# output noise in reviews.
+*.ipynb text eol=lf linguist-language=JSON
+
+*.py    text eol=lf
+*.js    text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+*.csv   text eol=lf
+*.bib   text eol=lf
+*.yml   text eol=lf
+*.json  text eol=lf
+
+# Shell scripts must be LF or they fail on Linux/Colab
+*.sh    text eol=lf
