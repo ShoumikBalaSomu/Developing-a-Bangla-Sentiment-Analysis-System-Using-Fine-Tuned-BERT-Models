@@ -1,125 +1,166 @@
-# Dataset Directory
+# Dataset Directory & Source Provenance
+
+> **Role in Project:** Comprehensive data acquisition, linguistic resource mining, and sentiment label harmonisation for fine-tuning Bangla BERT models.  
+> **Primary Script:** `src/download_datasets.py` &bull; `src/preprocess.py`  
+> **Interactive Notebook:** [`notebooks/01_data_preprocessing.ipynb`](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb)  
+> **Dataset Card:** See [`dataset_card.md`](dataset_card.md) for full metadata, licensing, and ethical disclosures.
 
 ---
 
-## ⚠️ Why this directory is (almost) empty in Git
+## 1. Upstream Kaggle & Hugging Face Datasets
 
-Both `raw/` and `preprocessed/` are **git-ignored**. Only this README, `dataset_card.md` and two `.gitkeep` files are version controlled.
+Six datasets drive this research system. Three are auxiliary linguistic resources (which contain no sentiment labels on their own), and three are supervised sentiment corpora:
 
-Three reasons:
+### 1.1 Auxiliary Linguistic Resources (Grammar, Lexicons, & Literature)
 
-1. **Size.** BanglaGEC alone is ~7.07M sentence pairs — several GB. The supervised corpora add more. GitHub is not a data store and will reject or cripple a repo this size.
-2. **Licence.** Each dataset is published under its own Kaggle / Hugging Face terms. Redistributing copies inside this repository would violate them. Users must download from the original host.
-3. **Reproducibility is better than a snapshot.** A committed CSV can silently drift from the code that produced it. Regenerating from documented sources with a fixed seed, then comparing SHA-256 hashes, proves the data and the code agree.
+| Dataset | Kaggle Repository Link | Hugging Face Mirror | Size / Rows | Role in System | Kaggle Auth |
+|---|---|---|:---:|---|:---:|
+| **BanglaGEC** | [**`nahidhub/banglagec`**](https://www.kaggle.com/datasets/nahidhub/banglagec) | [`nahid-hub/BanglaGEC`](https://huggingface.co/datasets/nahid-hub/BanglaGEC) | ~7.07M sentence pairs | **Grammar-rule mining.** Mined 2,238 source&rarr;target substitution rules (support &ge; 5) to clean noisy social text (+2.17% Macro-F1 boost). Target column builds well-formed vocabulary (96,383 types). | Public on HF |
+| **Bangla NLP Words** | [**`saifsunny/bangla-nlp-words`**](https://www.kaggle.com/datasets/saifsunny/bangla-nlp-words) | — | 76,293 entries | **Negation lexicon & stopwords.** Supplies the 14-negator list for syntactic `NEG_` scope tagging and 813 Bangla stopwords. | Yes |
+| **Bangla NLP Catalog** | [**`kishormorol/bangla-nlp-catalog`**](https://www.kaggle.com/datasets/kishormorol/bangla-nlp-catalog) | [`kishormorol/bangla-nlp-catalog`](https://huggingface.co/datasets/kishormorol/bangla-nlp-catalog) | 905 papers & datasets | **Literature review generator.** Filtered by `src/catalog_to_lr.py` (166 sentiment papers captured) to produce `docs/02_literature_review.md`. | Public on HF |
+
+### 1.2 Supervised Sentiment Corpora (Supervision)
+
+| Dataset | Kaggle Repository Link | Raw Rows | Original Label Scheme | Harmonised Classes | Kaggle Auth |
+|---|---|:---:|---|---|:---:|
+| **RevBangla** | [**`saifsunny/revbangla`**](https://www.kaggle.com/datasets/saifsunny/revbangla) | 5,015 | `Label_Sentiment` (positive / negative) | Negative (0), Positive (2) | Yes |
+| **Bangladesh Daraz Reviews** | [**`robiulhasanjisan/bangladesh-daraz-reviews-for-sentiment-analysis`**](https://www.kaggle.com/datasets/robiulhasanjisan/bangladesh-daraz-reviews-for-sentiment-analysis) | 8,944 | `rating` (1 to 5 star ratings) | 1-2 &rarr; Neg, 3 &rarr; Neu, 4-5 &rarr; Pos | Yes |
+| **Large Sentiment Analysis Bangla** | [**`tahmidmir/largesentimentdata`**](https://www.kaggle.com/datasets/tahmidmir/largesentimentdata) | 100,000 | `Sentiment` (positive / negative / neutral) | Negative (0), Neutral (1), Positive (2) | Yes |
 
 ---
 
-## Regenerating everything
+## 2. Setting Up Kaggle Credentials & Downloading
 
-**On Colab** — run [`notebooks/01_data_preprocessing.ipynb`](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb). Section 2 walks through Kaggle credentials; section 3 downloads; section 4 runs the pipeline.
+### 2.1 Generating Kaggle API Token
+1. Go to [kaggle.com](https://www.kaggle.com) &rarr; Click your avatar &rarr; **Settings**.
+2. Scroll to the **API** section and click **Create New Token**.
+3. A file named `kaggle.json` will download.
+4. Place `kaggle.json` in:
+   - **Linux / macOS:** `~/.kaggle/kaggle.json`
+   - **Windows:** `C:\Users\<username>\.kaggle\kaggle.json`
+5. Set permissions (Linux/macOS): `chmod 600 ~/.kaggle/kaggle.json`
 
-**Locally:**
+### 2.2 Automated Acquisition via Project Pipeline
+To download and extract all datasets into `dataset/raw/`:
 
 ```bash
-pip install -r requirements.txt
-
-# Kaggle credentials, needed for bangla-nlp-words and the three sentiment corpora.
-#   kaggle.com -> avatar -> Settings -> API -> Create New Token
-#   Windows: place kaggle.json at  C:\Users\<you>\.kaggle\kaggle.json
-#   macOS/Linux:                     ~/.kaggle/kaggle.json
-
+# Automated fetcher using Kaggle API + Hugging Face Hub:
 python src/download_datasets.py --max-rows 200000
-python src/preprocess.py
-python src/catalog_to_lr.py --top 40
+
+# Or run without Kaggle credentials (downloads public HF mirrors only):
+python src/download_datasets.py --skip-kaggle
 ```
 
-Without Kaggle credentials, add `--skip-kaggle`. BanglaGEC and bangla-nlp-catalog still download from their public Hugging Face mirrors, so the grammar-mining and literature-review stages remain demonstrable — but there will be **no labelled sentiment data**, and `preprocess.py` will say so explicitly instead of failing quietly.
+### 2.3 Manual Download via Kaggle CLI
+If you prefer downloading individual datasets manually:
+
+```bash
+# Auxiliary Resources:
+kaggle datasets download -d nahidhub/banglagec -p dataset/raw/banglagec --unzip
+kaggle datasets download -d saifsunny/bangla-nlp-words -p dataset/raw/bangla_nlp_words --unzip
+kaggle datasets download -d kishormorol/bangla-nlp-catalog -p dataset/raw/bangla_nlp_catalog --unzip
+
+# Supervised Corpora:
+kaggle datasets download -d saifsunny/revbangla -p dataset/raw/revbangla --unzip
+kaggle datasets download -d robiulhasanjisan/bangladesh-daraz-reviews-for-sentiment-analysis -p dataset/raw/daraz_bd --unzip
+kaggle datasets download -d tahmidmir/largesentimentdata -p dataset/raw/largesentiment --unzip
+```
 
 ---
 
-## Layout
+## 3. Preprocessing, Harmonisation & Splitting Pipeline
+
+Executed by `src/preprocess.py` or **Notebook 01** (`notebooks/01_data_preprocessing.ipynb`):
+
+```mermaid
+flowchart LR
+    A["Raw Supervised Pool\n(113,959 rows)"] --> B["Harmonisation\n(Canonical 3-Class)"]
+    B --> C["Length & Script Filter\n(Bangla Script ≥ 40%)"]
+    C --> D["Deduplication\n(8,573 clean rows)"]
+    D --> E["Stratified Split & Cap\n(train: 5,797 | val: 1,388 | test: 1,388)"]
+```
+
+### 3.1 Supervised Pool Attrition
+
+| Stage | Rows Remaining | Dropped | Drop Rationale |
+|---|:---:|:---:|---|
+| **Raw Supervised Pool** | 113,959 | — | Combined Daraz + RevBangla + LargeSentiment |
+| **After Label Harmonisation** | 113,959 | 0 | All source labels mapped to `{negative, neutral, positive}` |
+| **After Length Filter** | 113,227 | 732 | Text length < 3 or > 1,000 characters |
+| **After Script Filter** | 108,795 | 4,432 | Bangla character ratio < 0.40 (filtered pure English spam) |
+| **After Deduplication** | **8,573** | 100,222 | Exact duplicate text (LargeSentiment had ~20 unique comments repeated) |
+
+### 3.2 Partition Distribution & Majority Class Cap
+- **Stratification:** Split on `(label, source)` jointly to guarantee zero platform domain leakage.
+- **Majority Class Cap:** Training positive majority class capped at 60% (3,883 rows) to prevent minority class collapse.
+- **Leakage Guard:** Train/Test overlap is **0**, and Train/Val overlap is **0**.
+
+| Partition | Total Rows | Negative (0) | Neutral (1) | Positive (2) | Share of Pool |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Train** | **5,797** | 1,816 (31.3%) | 98 (1.7%) | 3,883 (67.0%) | 70% |
+| **Validation** | **1,388** | 389 (28.0%) | 22 (1.6%) | 977 (70.4%) | 15% |
+| **Test** | **1,388** | 389 (28.0%) | 21 (1.5%) | 978 (70.5%) | 15% |
+
+---
+
+## 4. Directory Layout & Generated Artifacts
 
 ```
 dataset/
-├── README.md                  ← this file
-├── dataset_card.md            ← full schema, provenance, licences, ethics
-├── raw/                       ← downloaded sources          (git-ignored)
-│   ├── banglagec/
-│   ├── bangla_nlp_words/
-│   ├── bangla_nlp_catalog/
-│   ├── revbangla/
-│   ├── largesentiment/
-│   └── daraz_bd/
-└── preprocessed/              ← pipeline output             (git-ignored)
-    ├── train_clean.csv
-    ├── val_clean.csv
-    ├── test_clean.csv
-    ├── grammar_rules.csv
-    ├── negation_lexicon.txt
-    ├── bangla_stopwords.txt
-    ├── wellformed_vocab.txt
-    ├── literature_review_table.csv
-    ├── lr_task_frequency.csv
-    └── data_manifest.csv
+├── README.md                          ← This guide with Kaggle links & specifications
+├── dataset_card.md                    ← Academic metadata card, provenance, & ethical disclosures
+│
+├── raw/                               ← Downloaded raw datasets (git-ignored)
+│   ├── banglagec/                     ← nahidhub/banglagec (test.csv, train.csv, val.csv)
+│   ├── bangla_nlp_words/              ← saifsunny/bangla-nlp-words (stopwords, words.csv)
+│   ├── bangla_nlp_catalog/            ← kishormorol/bangla-nlp-catalog (catalog.csv)
+│   ├── revbangla/                     ← saifsunny/revbangla (data.csv)
+│   ├── daraz_bd/                      ← robiulhasanjisan/bangladesh-daraz-reviews (reviews.csv)
+│   └── largesentiment/                ← tahmidmir/largesentimentdata (dataset.csv)
+│
+└── preprocessed/                      ← Pipeline outputs (reproducible via seed 42)
+    ├── train_clean.csv                ← 5,797 training rows
+    ├── val_clean.csv                  ← 1,388 validation rows
+    ├── test_clean.csv                 ← 1,388 test rows
+    ├── grammar_rules.csv              ← 2,238 mined BanglaGEC substitution rules
+    ├── negation_lexicon.txt           ← 14-negator lexicon for syntactic scope tagging
+    ├── bangla_stopwords.txt           ← 813 curated Bangla stopwords
+    ├── wellformed_vocab.txt           ← 96,383 well-formed Bangla vocabulary tokens
+    ├── literature_review_table.csv    ← 166 sentiment catalog entries
+    ├── lr_task_frequency.csv          ← NLP catalog task breakdown
+    └── data_manifest.csv              ← SHA-256 cryptographic reproducibility record (committed)
 ```
 
 ---
 
-## Output schemas
+## 5. Cryptographic Reproducibility Manifest
 
-### `train_clean.csv` / `val_clean.csv` / `test_clean.csv`
+From [`dataset/preprocessed/data_manifest.csv`](preprocessed/data_manifest.csv):
 
-| Column | Type | Description |
-|---|---|---|
-| `raw_text` | str | Original text as downloaded, before any normalisation |
-| `text` | str | Normalised and negation-tagged model input |
-| `label` | str | Canonical label: `negative` / `neutral` / `positive` |
-| `label_id` | int | 0 / 1 / 2 — index into the canonical scheme |
-| `binary_label` | str | Derived 2-class label: `negative` / `positive` |
-| `binary_label_id` | int | 0 / 1 — present in the split files |
-| `source` | str | Which dataset the row came from — enables per-source slice analysis |
-| `has_negation` | bool | Whether `text` contains a `NEG_` tag |
-| `n_tokens` | int | Whitespace token count — enables the length slice |
-
-`raw_text` is retained so any normalisation decision can be audited against its input. `source` is retained so split leakage and platform shift are both measurable. Neither is used as a model feature.
-
-### `grammar_rules.csv`
-
-| Column | Type | Description |
-|---|---|---|
-| `source_token` | str | Ungrammatical token from BanglaGEC `source` |
-| `target_token` | str | Corrected token from BanglaGEC `target` |
-| `support` | int | Occurrences in the sample; all rows have support ≥ 5 |
-| `rule_type` | str | `unicode_normalisation` / `single_char_typo` / `affix_inflection` / `whitespace` / `lexical_substitution` |
-| `example` | str | One full source sentence containing the substitution, truncated to 120 chars |
-
-Sorted by descending support.
-
-### `data_manifest.csv`
-
-| Column | Type | Description |
-|---|---|---|
-| `artifact` | str | Registry key, or `<split>[rows]` for row counts |
-| `file` | str | Filename |
-| `bytes` | int | File size in bytes, or row count for the `[rows]` entries |
-| `sha256` | str | SHA-256 of the file, `-` for row-count entries |
-
-This is the reproducibility record quoted in `docs/04_analysis.md` §4.9.
+| Artifact | File Name | Size (Bytes) | SHA-256 Checksum |
+|---|---|:---:|---|
+| `clean_train` | `train_clean.csv` | 2,528,461 | `39f2df731b5b551bf7270744e6efc436c01e0a427d11d17f9a7433440f972a77` |
+| `clean_val` | `val_clean.csv` | 592,350 | `ca1794aadc6a5a68a489326b800ff80e0336312066aa01f0bd7cdbfd46449af3` |
+| `clean_test` | `test_clean.csv` | 586,114 | `c81b3cc200c4ae66a18c0ad49c0cc296f4d660814376dfb02a2088ecd0da776b` |
+| `grammar_rules` | `grammar_rules.csv` | 546,214 | `41d4f9190b870bf5b316b410ca1d07014f9e0eece2b94509f4cf1d62ecfa5ebe` |
+| `negation_lexicon`| `negation_lexicon.txt` | 178 | `d453b5f3fda0c30753bdb30aef921d0f8e907103d7e101e346b9de3b97c39072` |
+| `stopwords` | `bangla_stopwords.txt` | 12,573 | `bfdc94c204ad6e26f99635529d3c05ccb139fb90b65635427b938a097532bcf1` |
+| `vocab_wellformed`| `wellformed_vocab.txt` | 2,383,465 | `1b26dda73da67b41c806036bccc8a5508d2ba4a9e2e8f3a1bab123f353cd577a` |
+| `lr_table` | `literature_review_table.csv` | 55,619 | `eac3f2e2a4a147c082876361ef93cc3c09b2405f550be4c4c85e8ac5042e3582` |
 
 ---
 
-## Splits
+## 6. End-to-End Pipeline Execution
 
-| Split | Share | Stratified on |
-|---|---|---|
-| test | 15% | `(label, source)` jointly |
-| validation | 15% of total, carved from the remainder | `(label, source)` jointly |
-| train | 70% | — |
+To regenerate all preprocessed artifacts and verify the manifest:
 
-Stratifying on source as well as label prevents an entire platform from landing in one split. Without it, the test score measures domain shift rather than sentiment skill.
+```bash
+# 1. Acquire datasets from Kaggle & Hugging Face
+python src/download_datasets.py --max-rows 200000
 
-After splitting, any training class exceeding 60% of the frame is downsampled to that cap. Seed is fixed at 42 for every random operation.
+# 2. Mine grammar rules, build lexicons, clean, and split
+python src/preprocess.py --sample 200000
 
----
-
-See [`dataset_card.md`](dataset_card.md) for full provenance, label mappings, licences and the ethics statement.
+# 3. Generate literature review catalog table
+python src/catalog_to_lr.py --top 40
+```

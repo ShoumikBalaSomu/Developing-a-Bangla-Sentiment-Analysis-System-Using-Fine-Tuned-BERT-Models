@@ -16,7 +16,7 @@ A harmonised Bangla sentiment corpus assembled from three labelled sources and s
 | Task | Document-level sentiment classification |
 | Classes | 3 primary `{negative, neutral, positive}`; 2 derived `{negative, positive}` |
 | Domains | E-commerce product reviews, social-media comments |
-| Size | ⚠️ Not yet measured — run Notebook 01 and record from `data_manifest.csv` |
+| Size | 8,573 deduplicated rows (Train: 5,797, Val: 1,388, Test: 1,388) |
 | Splits | train 70% / val 15% / test 15% |
 | Seed | 42 (all random operations) |
 | Committed to Git | **No** — see §7 |
