@@ -120,7 +120,7 @@ Full detail in [`../docs/03_methodology.md`](../docs/03_methodology.md) §3.5.
 
 ### 5.2 Other artefacts
 
-See [`README.md`](README.md) §Output schemas for `grammar_rules.csv`, `negation_lexicon.txt`, `bangla_stopwords.txt`, `wellformed_vocab.txt`, `literature_review_table.csv` and `data_manifest.csv`.
+See [`README.md`](README.md#4-directory-layout--generated-artifacts) §Output schemas for `grammar_rules.csv`, `negation_lexicon.txt`, `bangla_stopwords.txt`, `wellformed_vocab.txt`, `literature_review_table.csv` and `data_manifest.csv`.
 
 ---
 
