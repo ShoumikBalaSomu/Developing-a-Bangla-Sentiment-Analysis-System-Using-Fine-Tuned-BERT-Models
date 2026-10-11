@@ -1,7 +1,14 @@
 # Developing a Bangla Sentiment Analysis System Using Fine-Tuned BERT Models
 
-**Course:** CSE432 — Natural Language Processing (NLP)
-**Repository:** <https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models>
+**Course:** CSE432 — Natural Language Processing (NLP)  
+**Repository:** <https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models>  
+**Live Interactive Showcase:** <https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/>
+
+[![Live Interactive Showcase](https://img.shields.io/badge/Live%20Showcase-Interactive%20Playground-0d9488?style=for-the-badge&logo=google-chrome&logoColor=white)](https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/)
+[![Open in Colab](https://img.shields.io/badge/Google%20Colab-One--Click%20Reproduction-f59e0b?style=for-the-badge&logo=google-colab&logoColor=white)](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb)
+[![Paper .DOCX](https://img.shields.io/badge/Research%20Paper-Google%20Docs%20Format-3b82f6?style=for-the-badge&logo=googledocs&logoColor=white)](https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/raw/main/paper/CSE432_Bangla_Sentiment_BERT_Paper.docx)
+
+> 🚀 **Explore the Live Interactive Website:** Test real-time sentiment predictions, inspect syntactic token negation scope highlighting, and interact with the empirical leaderboard at **[shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models](https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/)**
 
 ---
 
