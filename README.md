@@ -45,42 +45,137 @@ All eight required sections live in this repository as Markdown, and are also co
 
 ---
 
-## Repository Layout
+## Repository Architecture & Layout
+
+### System Pipeline & Data Flow
+
+```mermaid
+flowchart TD
+    subgraph Data_Acquisition ["1. Data Acquisition & Auxiliary Mining"]
+        A1["BanglaGEC (~7.07M pairs)"] -->|Rule Mining| B1["grammar_rules.csv (2,238 rules)"]
+        A2["bangla-nlp-words"] -->|Lexicon Extraction| B2["negation_lexicon.txt (14 negators)"]
+        A3["bangla-nlp-catalog (905 entries)"] -->|Keyword Filter| B3["literature_review_table.csv (166 entries)"]
+        A4["Supervised Datasets\n(Daraz BD + RevBangla + LargeSentiment)"] -->|Label Harmonisation| B4["Harmonised Sentiment Pool (113,959 rows)"]
+    end
+
+    subgraph Preprocessing_Pipeline ["2. Pipeline & Stratification (src/preprocess.py)"]
+        B1 & B2 & B4 --> C1["Cleaning & Unicode Normalisation\n+ Negation Scope Tagging (NEG_)"]
+        C1 --> C2["Deduplication & Script Filter (Bangla ≥ 40%)"]
+        C2 --> C3["Stratified Disjoint Splits\n(train: 5,797 | val: 1,388 | test: 1,388)"]
+    end
+
+    subgraph Model_Training ["3. Fine-Tuning & Baselines (src/train.py)"]
+        C3 --> D1["TF-IDF + Logistic Regression (Baseline)"]
+        C3 --> D2["BanglaBERT & BanglishBERT (ELECTRA)"]
+        C3 --> D3["Bangla BERT Base (sagorsarker)"]
+        C3 --> D4["mBERT & XLM-RoBERTa (Multilingual)"]
+        D2 & D3 & D4 -->|Discriminative LR + Class Weights| E1["checkpoints/*/best"]
+    end
+
+    subgraph Evaluation_Reporting ["4. Evaluation, Diagnostics & Showcase (src/evaluate.py)"]
+        E1 & C3 --> F1["results/metrics_all_models.csv (Leaderboard)"]
+        E1 & C3 --> F2["results/*.png (Confusion Matrices & ROC Curves)"]
+        E1 & C3 --> F3["results/slice_by_*.csv (Platform & Negation Slices)"]
+        F1 & F2 --> G1["notebooks/*.ipynb (Executed Outputs)"]
+        F1 & F2 --> G2["paper/*.docx (Google Docs Paper)"]
+        F1 & F2 --> G3["docs/index.html (Live Interactive Showcase)"]
+    end
+
+    style Data_Acquisition fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
+    style Preprocessing_Pipeline fill:#0f172a,stroke:#2dd4bf,stroke-width:1px,color:#f8fafc
+    style Model_Training fill:#0f172a,stroke:#a855f7,stroke-width:1px,color:#f8fafc
+    style Evaluation_Reporting fill:#0f172a,stroke:#34d399,stroke-width:1px,color:#f8fafc
+```
+
+---
+
+### Modern Directory Map
 
 ```
-.
-├── README.md                  ← this file
-├── requirements.txt
-├── LICENSE
-├── docs/
-│   ├── 01_introduction.md
-│   ├── 02_literature_review.md
-│   ├── 03_methodology.md
-│   ├── 04_analysis.md
-│   ├── 05_conclusion.md
-│   └── references.bib
-├── paper/
-│   ├── CSE432_Bangla_Sentiment_BERT_Paper.md
-│   └── CSE432_Bangla_Sentiment_BERT_Paper.docx
-├── notebooks/
-│   ├── 01_data_preprocessing.ipynb
-│   ├── 02_bert_finetuning.ipynb
-│   └── 03_evaluation_and_analysis.ipynb
-├── src/
-│   ├── config.py              ← paths, dataset & model registry, hyper-parameters
-│   ├── download_datasets.py   ← Kaggle + Hugging Face fetchers
-│   ├── preprocess.py          ← normalisation, negation scope, label harmonisation, splits
-│   ├── catalog_to_lr.py       ← turns bangla-nlp-catalog into a literature-review table
-│   ├── train.py               ← BERT fine-tuning loop
-│   └── evaluate.py            ← metrics, plots, error analysis
-├── dataset/
-│   ├── README.md
-│   ├── dataset_card.md
-│   ├── raw/                   ← downloaded sources (git-ignored)
-│   └── preprocessed/          ← pipeline output (git-ignored)
-└── results/
-    └── README.md              ← where notebook outputs land
+Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/
+│
+├── 🌐 docs/                                   ← Project Documentation & Live GitHub Pages Showcase
+│   ├── index.html                             ← Interactive Live Showcase (Playground, Leaderboard, Lightbox)
+│   ├── .nojekyll                              ← GitHub Pages static asset bypass flag
+│   ├── 01_introduction.md                     ← Section 1: Research Motivation & Problem Statement
+│   ├── 02_literature_review.md                ← Section 2: Catalog Survey & Prior Work
+│   ├── 03_methodology.md                      ← Section 3: Preprocessing, GEC Mining, & Fine-Tuning Recipe
+│   ├── 04_analysis.md                         ← Section 4: Empirical Results, Slices, & Qualitative Error Analysis
+│   ├── 05_conclusion.md                       ← Section 5: Findings, Limitations, & Future Work
+│   ├── references.bib                         ← Complete BibTeX Bibliography (35+ citations)
+│   ├── assets/                                ← Web assets & direct paper downloads (.docx / .md / images)
+│   └── generated/                             ← Auto-generated prior work summary tables
+│
+├── 📓 notebooks/                              ← Fully Executed One-Click Colab Notebooks
+│   ├── 01_data_preprocessing.ipynb            ← Data download, GEC mining, negation tagging, manifest (30 outputs)
+│   ├── 02_bert_finetuning.ipynb               ← Training setup, metrics, leaderboard, live inference demo (13 outputs)
+│   └── 03_evaluation_and_analysis.ipynb       ← Leaderboard, slice analyses, 13 inline rendered figures (46 outputs)
+│
+├── 📊 results/                                ← Verified Empirical Metrics & Diagnostic Figures
+│   ├── metrics_all_models.csv                 ← Consolidated 3-class test leaderboard (Accuracy, F1, MCC, AUC)
+│   ├── binary_metrics.csv                     ← Binary 2-class benchmark metrics (RevBangla comparison)
+│   ├── group_comparison.csv                   ← Language-specific vs. Multilingual pretraining gap (+2.22%)
+│   ├── metrics_baseline.csv                   ← TF-IDF + Logistic Regression reference baseline
+│   ├── metrics_ablation_no_rules.csv          ← Ablation delta without BanglaGEC normalisation (-2.17% F1)
+│   ├── bar_macro_f1.png                       ← Comparative Macro-F1 bar chart across all models
+│   ├── bar_accuracy.png                       ← Comparative Accuracy bar chart across all models
+│   ├── label_distribution.png                 ← Stratified label distribution across Train, Val, and Test
+│   ├── confusion_<model>.png                  ← Row-normalised & count confusion matrices (5 models)
+│   ├── roc_<model>.png                        ← One-vs-rest ROC curves with per-class AUC (5 models)
+│   ├── slice_by_source_<model>.csv            ← Cross-platform generalisation analysis (Daraz vs. RevBangla)
+│   ├── slice_by_negation_<model>.csv          ← Negation scope deficit analysis (Tagged vs. Untagged)
+│   ├── slice_by_length_<model>.csv            ← Comment length impact analysis (1-5 tokens vs. 41+ tokens)
+│   └── errors_<model>.csv                     ← Sampled misclassifications for qualitative error inspection
+│
+├── 🧠 src/                                    ← Modular Python Pipeline & Training Core
+│   ├── config.py                              ← Paths, hyperparameters, label schemas, & model registry
+│   ├── download_datasets.py                   ← Automated Kaggle API & Hugging Face data fetcher
+│   ├── preprocess.py                          ← Unicode normaliser, GEC rule miner, negation tagger, splitter
+│   ├── train.py                               ← Hugging Face Trainer fine-tuning loop (Discriminative LR & Weights)
+│   ├── evaluate.py                            ← Metric computation, ROC/confusion plotting, slice generator
+│   └── catalog_to_lr.py                       ← Extracts sentiment literature table from bangla-nlp-catalog
+│
+├── 📑 paper/                                  ← Course Submission Report (Google Docs & Markdown)
+│   ├── CSE432_Bangla_Sentiment_BERT_Paper.docx← Formatted Word Document with all embedded figures
+│   ├── CSE432_Bangla_Sentiment_BERT_Paper.md  ← Full synthesized Markdown manuscript
+│   └── front_matter.md                        ← Course header, authors, and abstract metadata
+│
+├── 📦 dataset/                                ← Dataset Documentation & Pipeline Targets
+│   ├── dataset_card.md                        ← Comprehensive Dataset Card with provenance & ethical notes
+│   ├── preprocessed/data_manifest.csv         ← Cryptographic SHA-256 verification manifest
+│   ├── raw/                                   ← Downloaded raw datasets (cached locally, git-ignored)
+│   └── preprocessed/                          ← Output splits & lexicons (reproducible from seed, git-ignored)
+│
+├── 💾 checkpoints/                            ← Trained Transformer Backbones & Weights (local/Drive)
+│   ├── banglabert/best/                       ← Best checkpoint: csebuetnlp/banglabert
+│   ├── banglishbert/best/                     ← Best checkpoint: csebuetnlp/banglishbert
+│   ├── bangla_bert_base/best/                 ← Best checkpoint: sagorsarker/bangla-bert-base
+│   ├── mbert/best/                            ← Best checkpoint: bert-base-multilingual-cased
+│   └── xlmr/best/                             ← Best checkpoint: xlm-roberta-base
+│
+├── 🛠️ tools/                                  ← Developer Compilation & Build Automation
+│   ├── build_notebooks.js                     ← Assembles .ipynb notebooks from human-editable cell sources
+│   ├── build_paper.js                         ← Synthesizes docs/*.md into unified submission paper
+│   └── notebooks/*.cells.md                   ← Human-readable markdown cell sources for Colab notebooks
+│
+├── requirements.txt                           ← Pinned Python dependencies (PyTorch, Transformers, Accelerate)
+├── LICENSE                                    ← MIT Open-Source License
+└── README.md                                  ← Project summary, leaderboard, and visual showcase
 ```
+
+---
+
+### Component Breakdown & Roles
+
+| Module | Primary Path | Role in Research System | Reproducibility Source |
+|---|---|---|---|
+| **Live Showcase** | [`docs/index.html`](docs/index.html) | Interactive web interface featuring live Bangla sentiment prediction, token inspection, and leaderboard | Hosted on GitHub Pages |
+| **Colab Notebooks** | [`notebooks/`](notebooks/) | 3 executable notebooks with verified outputs & visual plots for graders and reviewers | Launchable via Colab badges |
+| **Source Core** | [`src/`](src/) | Clean, modular Python scripts for download, preprocessing, training, and evaluation | Runnable via standard CLI |
+| **Empirical Results** | [`results/`](results/) | Consolidated leaderboard CSVs, slice tables, error samples, and 13 diagnostic figures | Generated by `src/evaluate.py` |
+| **Submission Paper** | [`paper/`](paper/) | Complete synthesized manuscript in `.docx` (Google Docs importable) and `.md` | Built by `tools/build_paper.js` |
+| **Dataset Card** | [`dataset/`](dataset/) | Provenance, label mapping specifications, and SHA-256 integrity manifest | Built by `src/preprocess.py` |
+| **Model Weights** | [`checkpoints/`](checkpoints/) | Fine-tuned PyTorch safetensors, tokenizer vocabulary, and configuration files | Produced by `src/train.py` |
 
 ---
 
