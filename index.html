@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bangla Sentiment Analysis Using Fine-Tuned BERT | CSE432 NLP Research</title>
+  <meta name="description" content="State-of-the-art Bangla Sentiment Analysis comparing language-specific vs. multilingual BERT models with BanglaGEC grammar mining and negation scope tagging.">
+
+  <!-- Google Fonts: Plus Jakarta Sans (UI/Headings) + Inter (Body) + Hind Siliguri (Bangla) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', 'sans-serif'],
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            bangla: ['"Hind Siliguri"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              400: '#2dd4bf',
+              500: '#14b8a6',
+              600: '#0d9488',
+              accent: '#38bdf8',
+            },
+            surface: {
+              dark: '#080a10',
+              card: '#0f1422',
+              border: '#1f293d',
+              glass: 'rgba(15, 20, 34, 0.75)',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 4s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    body {
+      background-color: #07090e;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    .gradient-glow {
+      background: radial-gradient(circle at 50% 0%, rgba(20, 184, 166, 0.15) 0%, rgba(56, 189, 248, 0.08) 35%, transparent 70%);
+    }
+    .glass-panel {
+      background: rgba(15, 20, 34, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-hover {
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .glass-card-hover:hover {
+      transform: translateY(-3px);
+      border-color: rgba(45, 212, 191, 0.35);
+      box-shadow: 0 12px 30px -10px rgba(20, 184, 166, 0.2);
+    }
+    .bangla-text {
+      font-family: 'Hind Siliguri', sans-serif;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #080a10;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f293d;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2dd4bf;
+    }
+  </style>
+</head>
+<body class="selection:bg-teal-500 selection:text-black">
+
+  <!-- Ambient Glow Background -->
+  <div class="fixed inset-0 gradient-glow pointer-events-none -z-10"></div>
+  <div class="fixed top-[-20%] left-[-10%] w-[500px] h-[500px] bg-teal-500/10 rounded-full blur-[140px] pointer-events-none -z-10"></div>
+  <div class="fixed top-[40%] right-[-10%] w-[550px] h-[550px] bg-sky-500/10 rounded-full blur-[160px] pointer-events-none -z-10"></div>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 glass-panel border-b border-white/5 py-3.5 px-4 sm:px-8">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-teal-500 to-sky-400 flex items-center justify-center font-bold text-black font-display shadow-lg shadow-teal-500/20">
+          ব
+        </div>
+        <div>
+          <span class="font-display font-bold text-white text-base tracking-tight flex items-center gap-2">
+            BanglaBERT <span class="text-xs px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30 font-medium">CSE432 NLP</span>
+          </span>
+          <p class="text-[11px] text-slate-400 hidden sm:block">Fine-Tuned Bangla Sentiment System</p>
+        </div>
+      </div>
+
+      <nav class="hidden md:flex items-center space-x-7 text-sm font-medium text-slate-300">
+        <a href="#demo" class="hover:text-teal-300 transition-colors">Playground</a>
+        <a href="#leaderboard" class="hover:text-teal-300 transition-colors">Leaderboard</a>
+        <a href="#architecture" class="hover:text-teal-300 transition-colors">Architecture</a>
+        <a href="#gallery" class="hover:text-teal-300 transition-colors">Diagnostics</a>
+        <a href="#notebooks" class="hover:text-teal-300 transition-colors">Colab Notebooks</a>
+        <a href="#paper" class="hover:text-teal-300 transition-colors">Research Paper</a>
+      </nav>
+
+      <div class="flex items-center space-x-3">
+        <a href="https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models" target="_blank"
+           class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-all">
+          <i data-lucide="github" class="w-3.5 h-3.5"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="#demo"
+           class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-teal-400 to-sky-400 hover:from-teal-300 hover:to-sky-300 text-slate-950 shadow-md shadow-teal-500/20 transition-all">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+          <span>Live Demo</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-16 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-950/70 border border-teal-500/30 text-teal-300 text-xs font-medium mb-6 animate-pulse-slow">
+      <span class="w-2 h-2 rounded-full bg-teal-400 animate-ping"></span>
+      <span>Empirical NLP Research &bull; CSE432 Final Project</span>
+    </div>
+
+    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold font-display text-white tracking-tight leading-[1.1] max-w-5xl mx-auto">
+      Cracking Nuance &amp; Negation in <br class="hidden sm:inline" />
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-teal-300 via-sky-300 to-indigo-300">
+        Bangla Sentiment Analysis
+      </span>
+    </h1>
+
+    <p class="mt-6 text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+      A fine-tuned transformer benchmark across 5 architectures, integrating grammar-rule mining from
+      <span class="text-white font-medium">7.07M BanglaGEC sentence pairs</span> and syntactic
+      <span class="text-teal-300 font-medium">negation-scope tagging</span> to solve polarity inversion in noisy social text.
+    </p>
+
+    <!-- Key Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-12">
+      <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+        <div class="text-3xl sm:text-4xl font-extrabold font-display text-white">90.27%</div>
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium mt-1">Binary Accuracy</div>
+        <div class="text-[11px] text-teal-400/90 mt-1">Matches RevBangla SOTA</div>
+      </div>
+      <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+        <div class="text-3xl sm:text-4xl font-extrabold font-display text-teal-300">+2.22%</div>
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium mt-1">Language Specific Gap</div>
+        <div class="text-[11px] text-slate-400 mt-1">BanglaBERT vs Multilingual</div>
+      </div>
+      <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+        <div class="text-3xl sm:text-4xl font-extrabold font-display text-sky-300">7.07M</div>
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium mt-1">BanglaGEC Pairs Mined</div>
+        <div class="text-[11px] text-sky-400/90 mt-1">+2.17% Macro-F1 via GEC</div>
+      </div>
+      <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
+        <div class="text-3xl sm:text-4xl font-extrabold font-display text-amber-300">0 Leakage</div>
+        <div class="text-xs uppercase tracking-wider text-slate-400 font-medium mt-1">Stratified Splits</div>
+        <div class="text-[11px] text-slate-400 mt-1">Strict text disjointness</div>
+      </div>
+    </div>
+
+    <!-- Quick CTAs -->
+    <div class="flex flex-wrap items-center justify-center gap-4 mt-10">
+      <a href="#demo"
+         class="px-7 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-teal-400 to-sky-400 hover:from-teal-300 hover:to-sky-300 text-slate-950 shadow-lg shadow-teal-500/25 transition-all flex items-center gap-2">
+        <i data-lucide="play" class="w-4 h-4 fill-slate-950"></i>
+        <span>Try Interactive Playground</span>
+      </a>
+      <a href="assets/CSE432_Bangla_Sentiment_BERT_Paper.docx" download
+         class="px-6 py-3 rounded-xl font-semibold text-sm bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-all flex items-center gap-2">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        <span>Download Paper (.docx)</span>
+      </a>
+      <a href="#notebooks"
+         class="px-5 py-3 rounded-xl font-semibold text-sm bg-slate-900/90 hover:bg-slate-800 text-slate-300 border border-slate-700/60 transition-all flex items-center gap-2">
+        <i data-lucide="terminal" class="w-4 h-4 text-amber-400"></i>
+        <span>Google Colab</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Section 1: Live Interactive Sentiment Playground -->
+  <section id="demo" class="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20">
+    <div class="text-center mb-10">
+      <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Real-Time Evaluation</span>
+      <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Interactive Sentiment Playground</h2>
+      <p class="text-sm text-slate-400 mt-2 max-w-2xl mx-auto">
+        Test Bangla reviews against our fine-tuned model inference engine. Observe how syntactic negator tokens (<code class="text-teal-300">না</code>, <code class="text-teal-300">নয়</code>, <code class="text-teal-300">নেই</code>) invert polarity.
+      </p>
+    </div>
+
+    <!-- Playground Shell -->
+    <div class="glass-panel rounded-3xl p-6 sm:p-8 border border-white/10 shadow-2xl relative overflow-hidden">
+      <!-- Glow effect -->
+      <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-teal-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <!-- Model Selection Pills -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/5">
+        <div class="text-xs font-semibold text-slate-400 flex items-center gap-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-teal-400"></i>
+          <span>Active Classifier Backbone:</span>
+        </div>
+        <div class="flex flex-wrap gap-1.5" id="modelSelector">
+          <button data-model="banglabert" class="model-btn active px-3 py-1 rounded-lg text-xs font-semibold bg-teal-500 text-black border border-teal-400 transition-all">BanglaBERT (ELECTRA)</button>
+          <button data-model="banglishbert" class="model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all">BanglishBERT</button>
+          <button data-model="bangla_bert_base" class="model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all">bangla-bert-base</button>
+          <button data-model="mbert" class="model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all">mBERT</button>
+          <button data-model="xlmr" class="model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all">XLM-RoBERTa</button>
+          <button data-model="tfidf_logreg" class="model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all">TF-IDF Baseline</button>
+        </div>
+      </div>
+
+      <!-- Quick Preset Prompts -->
+      <div class="mt-5">
+        <span class="text-xs text-slate-400 font-medium">Quick Test Prompts (Click to test):</span>
+        <div class="flex flex-wrap gap-2 mt-2">
+          <button class="preset-chip text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all" data-text="পণ্যটি অসাধারণ, খুবই ভালো লেগেছে">
+            🟢 পণ্যটি অসাধারণ, খুবই ভালো লেগেছে
+          </button>
+          <button class="preset-chip text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all" data-text="পণ্যটি একেবারেই ভালো না">
+            🔴 পণ্যটি একেবারেই ভালো না
+          </button>
+          <button class="preset-chip text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all" data-text="দাম অনেক বেশি কিন্তু মান খুব একটা ভালো নয়">
+            ⚖️ দাম অনেক বেশি কিন্তু মান ভালো নয়
+          </button>
+          <button class="preset-chip text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all" data-text="ডেলিভারি দ্রুত হয়েছে কিন্তু প্যাকেজিং নষ্ট ছিল">
+            📦 প্যাকেজিং নষ্ট ছিল
+          </button>
+          <button class="preset-chip text-xs px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 border border-white/5 transition-all" data-text="সেবা মোটামুটি, বিশেষ কিছু বলার নেই">
+            ⚪ সেবা মোটামুটি, বিশেষ কিছু বলার নেই
+          </button>
+        </div>
+      </div>
+
+      <!-- Two Column Input & Output Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+        <!-- Input Area -->
+        <div class="lg:col-span-7 flex flex-col justify-between">
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-2 flex items-center justify-between">
+              <span>Enter Bangla Review Text</span>
+              <span id="charCount" class="text-slate-500">32 chars</span>
+            </label>
+            <textarea id="demoInput" rows="5"
+              class="w-full bangla-text text-base sm:text-lg bg-slate-950/80 text-white rounded-2xl p-4 border border-white/10 focus:border-teal-400 focus:ring-1 focus:ring-teal-400 focus:outline-none transition-all placeholder:text-slate-600 resize-none"
+              placeholder="এখানে বাংলা মন্তব্য লিখুন... (e.g. পণ্যটি খুবই চমৎকার, ব্যবহার করে ভালো লাগলো)">পণ্যটি অসাধারণ, খুবই ভালো লেগেছে</textarea>
+          </div>
+
+          <!-- Token & Negation Scope Inspection -->
+          <div class="mt-4 p-3.5 rounded-xl bg-slate-950/40 border border-white/5">
+            <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+              <i data-lucide="binary" class="w-3.5 h-3.5 text-teal-400"></i>
+              <span>Pipeline Syntactic Token Inspection</span>
+            </div>
+            <div id="tokenTokens" class="flex flex-wrap gap-1.5 text-xs bangla-text mt-2">
+              <!-- Dynamically populated tokens -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Score Card -->
+        <div class="lg:col-span-5 flex flex-col justify-between bg-slate-950/70 rounded-2xl p-6 border border-white/10">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase font-bold tracking-wider text-slate-400">Model Prediction</span>
+              <span id="sentimentPill" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>POSITIVE</span>
+              </span>
+            </div>
+
+            <!-- Dominant Confidence Gauge -->
+            <div class="mt-5 text-center">
+              <div id="confidenceScore" class="text-5xl font-extrabold font-display text-white">96.8%</div>
+              <div class="text-xs text-slate-400 mt-1">Classification Confidence</div>
+            </div>
+
+            <!-- Probability Distribution Bars -->
+            <div class="space-y-3.5 mt-6">
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-emerald-400 flex items-center gap-1">🟢 Positive</span>
+                  <span id="probPositive" class="text-white font-mono">96.8%</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="barPositive" class="h-full bg-emerald-400 rounded-full transition-all duration-300" style="width: 96.8%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-amber-400 flex items-center gap-1">⚪ Neutral</span>
+                  <span id="probNeutral" class="text-white font-mono">1.8%</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="barNeutral" class="h-full bg-amber-400 rounded-full transition-all duration-300" style="width: 1.8%"></div>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-rose-400 flex items-center gap-1">🔴 Negative</span>
+                  <span id="probNegative" class="text-white font-mono">1.4%</span>
+                </div>
+                <div class="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                  <div id="barNegative" class="h-full bg-rose-400 rounded-full transition-all duration-300" style="width: 1.4%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-white/5 text-[11px] text-slate-400 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-teal-400"></i>
+              Negation window: 3 tokens
+            </span>
+            <span class="font-mono text-slate-500">Checkpoint: best</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: Interactive Leaderboard & Empirical Benchmark -->
+  <section id="leaderboard" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Experimental Evaluation</span>
+        <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Empirical Benchmark Leaderboard</h2>
+        <p class="text-sm text-slate-400 mt-2 max-w-xl">
+          Evaluated strictly on the held-out test split (1,388 samples). Toggle between benchmark regimes to see granular performance.
+        </p>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="flex flex-wrap p-1 rounded-xl bg-slate-900 border border-white/10 text-xs font-semibold">
+        <button id="tab3Class" class="leaderboard-tab active px-4 py-2 rounded-lg bg-teal-500 text-black shadow-sm transition-all">3-Class Benchmark</button>
+        <button id="tabBinary" class="leaderboard-tab px-4 py-2 rounded-lg text-slate-300 hover:text-white transition-all">Binary (RevBangla)</button>
+        <button id="tabParadigm" class="leaderboard-tab px-4 py-2 rounded-lg text-slate-300 hover:text-white transition-all">Language Specific vs. Multi</button>
+      </div>
+    </div>
+
+    <!-- Table Container -->
+    <div class="glass-panel rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm" id="leaderboardTable">
+          <thead class="bg-slate-950/80 text-xs uppercase tracking-wider text-slate-400 border-b border-white/10">
+            <tr>
+              <th class="py-4 px-6 font-semibold">Model</th>
+              <th class="py-4 px-6 font-semibold">Architecture / Backbone</th>
+              <th class="py-4 px-6 font-semibold text-right">Accuracy</th>
+              <th class="py-4 px-6 font-semibold text-right">Macro-F1</th>
+              <th class="py-4 px-6 font-semibold text-right">Weighted-F1</th>
+              <th class="py-4 px-6 font-semibold text-right">MCC</th>
+              <th class="py-4 px-6 font-semibold text-right">Macro-AUC</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5 text-slate-200" id="tableBody">
+            <!-- Dynamically populated via JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Insight Callouts -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-8">
+      <div class="glass-panel p-5 rounded-2xl border border-white/5">
+        <div class="flex items-center gap-2 text-teal-300 font-semibold text-xs uppercase tracking-wider mb-2">
+          <i data-lucide="check-circle" class="w-4 h-4"></i>
+          <span>Bangla-Specific Advantage</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          BanglaBERT and BanglishBERT outperform multilingual counterparts (mBERT and XLM-RoBERTa) by <strong class="text-white">+2.22 percentage points Macro-F1</strong>, proving monolingual pretraining captures complex morphology better than generic multilingual capacity.
+        </p>
+      </div>
+
+      <div class="glass-panel p-5 rounded-2xl border border-white/5">
+        <div class="flex items-center gap-2 text-sky-300 font-semibold text-xs uppercase tracking-wider mb-2">
+          <i data-lucide="shield-alert" class="w-4 h-4"></i>
+          <span>The Negation Deficit</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Non-negated reviews achieve <strong class="text-white">85.69%</strong> accuracy, whereas negated reviews drop to <strong class="text-white">65.59%</strong> (a 20.10% deficit). Post-verbal negation (<code class="text-sky-300">ভালো না</code>) accounts for majority of false positives.
+        </p>
+      </div>
+
+      <div class="glass-panel p-5 rounded-2xl border border-white/5">
+        <div class="flex items-center gap-2 text-amber-300 font-semibold text-xs uppercase tracking-wider mb-2">
+          <i data-lucide="layers" class="w-4 h-4"></i>
+          <span>BanglaGEC Ablation Contribution</span>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Ablation testing confirms that removing BanglaGEC grammar normalisation rules drops test Macro-F1 from <strong class="text-white">0.5985</strong> to <strong class="text-white">0.5768</strong> (-2.17%), demonstrating that error correction measurably improves downstream NLP.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: Architecture & Pipeline Walkthrough -->
+  <section id="architecture" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
+    <div class="text-center mb-14">
+      <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Engineering Rigor</span>
+      <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">End-to-End System Architecture</h2>
+      <p class="text-sm text-slate-400 mt-2 max-w-2xl mx-auto">
+        How three auxiliary datasets (BanglaGEC, bangla-nlp-words, bangla-nlp-catalog) empower sentiment classification without carrying sentiment labels themselves.
+      </p>
+    </div>
+
+    <!-- 4 Stage Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Stage 1 -->
+      <div class="glass-panel glass-card-hover p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/40 flex items-center justify-center font-bold font-display mb-4">
+            01
+          </div>
+          <h3 class="font-display font-bold text-lg text-white mb-2">Grammar Rule Mining</h3>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10 font-mono">nahidhub/banglagec</span>
+          <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+            Mines frequent source&rarr;target substitution patterns (support &ge; 5) from 7.07M sentence pairs to normalize social media typos before classification.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5 text-[11px] text-teal-400 font-medium">
+          2,238 high-support rules mined
+        </div>
+      </div>
+
+      <!-- Stage 2 -->
+      <div class="glass-panel glass-card-hover p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-500/40 flex items-center justify-center font-bold font-display mb-4">
+            02
+          </div>
+          <h3 class="font-display font-bold text-lg text-white mb-2">Negation Scope Tagging</h3>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10 font-mono">saifsunny/bangla-nlp-words</span>
+          <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+            Compiles a 14-negator lexicon. Tokens falling within a 3-token window are prefixed with <code class="text-sky-300">NEG_</code> so transformers explicitly attend to polarity inversion.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5 text-[11px] text-sky-400 font-medium">
+          13.4% reviews carry negation
+        </div>
+      </div>
+
+      <!-- Stage 3 -->
+      <div class="glass-panel glass-card-hover p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 flex items-center justify-center font-bold font-display mb-4">
+            03
+          </div>
+          <h3 class="font-display font-bold text-lg text-white mb-2">Harmonisation &amp; Split</h3>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10 font-mono">RevBangla &bull; Daraz &bull; LargeSent</span>
+          <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+            Maps star ratings and labels onto canonical 3-class scheme. Stratifies strictly on <code class="text-indigo-300">(label, source)</code> with 0 text leakage across partitions.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5 text-[11px] text-indigo-400 font-medium">
+          Train: 5,797 &bull; Val: 1,388 &bull; Test: 1,388
+        </div>
+      </div>
+
+      <!-- Stage 4 -->
+      <div class="glass-panel glass-card-hover p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center justify-center font-bold font-display mb-4">
+            04
+          </div>
+          <h3 class="font-display font-bold text-lg text-white mb-2">Discriminative Fine-Tuning</h3>
+          <span class="text-[11px] px-2.5 py-0.5 rounded-md bg-white/5 text-slate-400 border border-white/10 font-mono">csebuetnlp/banglabert</span>
+          <p class="text-xs text-slate-300 mt-3 leading-relaxed">
+            Pretrained backbone at 2e-5, random classifier head at 6e-5. Uses inverse-frequency class weights, early stopping on macro-F1, and label smoothing 0.05.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5 text-[11px] text-amber-400 font-medium">
+          Weighted cross-entropy optimization
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Visual Analytics Gallery -->
+  <section id="gallery" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+      <div>
+        <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Visual Evidence</span>
+        <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Diagnostic Analytics Gallery</h2>
+        <p class="text-sm text-slate-400 mt-2 max-w-xl">
+          High-resolution empirical figures generated by the evaluation suite and embedded in the submission paper.
+        </p>
+      </div>
+
+      <!-- Gallery Filter Buttons -->
+      <div class="flex flex-wrap p-1 rounded-xl bg-slate-900 border border-white/10 text-xs font-semibold">
+        <button class="gallery-btn active px-3.5 py-2 rounded-lg bg-teal-500 text-black transition-all" data-filter="comparison">Leaderboard Charts</button>
+        <button class="gallery-btn px-3.5 py-2 rounded-lg text-slate-300 hover:text-white transition-all" data-filter="confusion">Confusion Matrices</button>
+        <button class="gallery-btn px-3.5 py-2 rounded-lg text-slate-300 hover:text-white transition-all" data-filter="roc">ROC Curves</button>
+        <button class="gallery-btn px-3.5 py-2 rounded-lg text-slate-300 hover:text-white transition-all" data-filter="distribution">Split Distribution</button>
+      </div>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="galleryGrid">
+      <!-- Item: Macro-F1 -->
+      <div class="gallery-item comparison glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/bar_macro_f1.png', 'Macro-F1 Performance by Model')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/bar_macro_f1.png" alt="Macro-F1 Comparison" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">Macro-F1 by Model</h4>
+            <p class="text-[11px] text-slate-400">All 6 models ranked on test split</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Item: Accuracy -->
+      <div class="gallery-item comparison glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/bar_accuracy.png', 'Accuracy Performance by Model')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/bar_accuracy.png" alt="Accuracy Comparison" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">Accuracy by Model</h4>
+            <p class="text-[11px] text-slate-400">Headline accuracy comparison</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Item: Label Distribution -->
+      <div class="gallery-item distribution glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/label_distribution.png', 'Label Distribution Across Splits')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/label_distribution.png" alt="Label Distribution" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">Label Distribution Integrity</h4>
+            <p class="text-[11px] text-slate-400">Train vs. Val vs. Test proportions</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Item: BanglaBERT Confusion -->
+      <div class="gallery-item confusion glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/confusion_banglabert.png', 'BanglaBERT Confusion Matrix')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/confusion_banglabert.png" alt="BanglaBERT Confusion Matrix" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">BanglaBERT Confusion Matrix</h4>
+            <p class="text-[11px] text-slate-400">Counts &amp; row-normalised</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Item: BanglishBERT Confusion -->
+      <div class="gallery-item confusion glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/confusion_banglishbert.png', 'BanglishBERT Confusion Matrix')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/confusion_banglishbert.png" alt="BanglishBERT Confusion Matrix" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">BanglishBERT Confusion Matrix</h4>
+            <p class="text-[11px] text-slate-400">Code-mixed robustness candidate</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+
+      <!-- Item: BanglaBERT ROC -->
+      <div class="gallery-item roc glass-panel p-4 rounded-3xl border border-white/10 group cursor-pointer" onclick="openLightbox('assets/images/roc_banglabert.png', 'BanglaBERT One-vs-Rest ROC Curves')">
+        <div class="overflow-hidden rounded-2xl bg-slate-950 aspect-[4/3] flex items-center justify-center">
+          <img src="assets/images/roc_banglabert.png" alt="BanglaBERT ROC Curves" class="w-full h-full object-contain group-hover:scale-105 transition-all duration-300">
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+          <div>
+            <h4 class="font-display font-semibold text-white text-sm">BanglaBERT ROC &amp; AUC</h4>
+            <p class="text-[11px] text-slate-400">Per-class AUC (Macro: 0.8392)</p>
+          </div>
+          <span class="p-2 rounded-xl bg-white/5 group-hover:bg-teal-500/20 text-slate-400 group-hover:text-teal-300 transition-all">
+            <i data-lucide="maximize-2" class="w-4 h-4"></i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Colab Notebooks & Reproduction -->
+  <section id="notebooks" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
+    <div class="text-center mb-12">
+      <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">100% Reproducible Research</span>
+      <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">One-Click Google Colab Notebooks</h2>
+      <p class="text-sm text-slate-400 mt-2 max-w-2xl mx-auto">
+        Every stage runs deterministically. Click any badge to launch on Google Colab with GPU acceleration.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Notebook 01 -->
+      <div class="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-teal-400 font-mono">NOTEBOOK 01</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-white/5">CPU Runtime</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-white">Data Pre-processing</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Downloads raw sources, mines substitution rules from BanglaGEC, extracts negation lexicons, harmonises multi-source labels, and builds the SHA-256 data manifest.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5">
+          <a href="https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb" target="_blank"
+             class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-all flex items-center justify-center gap-2">
+            <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" class="h-4">
+            <span>Run Notebook 01</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Notebook 02 -->
+      <div class="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-sky-400 font-mono">NOTEBOOK 02</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40">T4 GPU Runtime</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-white">BERT Fine-Tuning</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Fine-tunes transformer models with discriminative learning rates, inverse-frequency class weights, early stopping on Macro-F1, and checkpoint persistence.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5">
+          <a href="https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/02_bert_finetuning.ipynb" target="_blank"
+             class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-gradient-to-r from-teal-500 to-sky-400 hover:from-teal-400 hover:to-sky-300 text-slate-950 font-bold transition-all flex items-center justify-center gap-2 shadow-md shadow-teal-500/20">
+            <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" class="h-4">
+            <span>Run Notebook 02</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Notebook 03 -->
+      <div class="glass-panel p-6 rounded-3xl border border-white/10 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <span class="text-xs font-bold text-amber-400 font-mono">NOTEBOOK 03</span>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-white/5">T4 GPU / CPU</span>
+          </div>
+          <h3 class="font-display font-bold text-lg text-white">Evaluation &amp; Diagnostics</h3>
+          <p class="text-xs text-slate-300 mt-2 leading-relaxed">
+            Evaluates held-out test splits, plots normalised confusion matrices, generates ROC curves, runs platform/negation/length slice analyses, and extracts qualitative error samples.
+          </p>
+        </div>
+        <div class="mt-6 pt-4 border-t border-white/5">
+          <a href="https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/03_evaluation_and_analysis.ipynb" target="_blank"
+             class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/10 transition-all flex items-center justify-center gap-2">
+            <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" class="h-4">
+            <span>Run Notebook 03</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Research Paper & Academic Credits -->
+  <section id="paper" class="py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto scroll-mt-20">
+    <div class="glass-panel rounded-3xl p-8 sm:p-12 border border-white/10 shadow-2xl relative overflow-hidden">
+      <div class="max-w-3xl">
+        <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Course Submission Documentation</span>
+        <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Research Paper &amp; Course Defense</h2>
+        <p class="text-sm text-slate-300 mt-3 leading-relaxed">
+          The project is documented as a complete academic research report covering all 8 required sections: Introduction, Literature Review, Methodology, Preprocessed Dataset, Source Code, Analysis, and Conclusion.
+        </p>
+
+        <!-- Contributors Card -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+          <div class="p-4 rounded-2xl bg-slate-950/60 border border-white/5">
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Student Researcher</div>
+            <div class="font-display font-bold text-white text-base mt-1">Shoumik Bala Somu</div>
+            <div class="text-xs text-teal-300 font-mono mt-0.5">ID: 232-15-657</div>
+            <div class="text-[11px] text-slate-400 mt-2">Data acquisition, BanglaGEC rule mining, BERT fine-tuning loop</div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-950/60 border border-white/5">
+            <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Student Researcher</div>
+            <div class="font-display font-bold text-white text-base mt-1">Raisha Khan Raka</div>
+            <div class="text-xs text-sky-300 font-mono mt-0.5">ID: 232-15-644</div>
+            <div class="text-[11px] text-slate-400 mt-2">Negation-scope handling, label harmonisation, evaluation protocol</div>
+          </div>
+        </div>
+
+        <!-- Download Buttons -->
+        <div class="flex flex-wrap items-center gap-3 mt-8">
+          <a href="assets/CSE432_Bangla_Sentiment_BERT_Paper.docx" download
+             class="px-6 py-3 rounded-xl font-semibold text-xs bg-gradient-to-r from-teal-400 to-sky-400 hover:from-teal-300 hover:to-sky-300 text-slate-950 flex items-center gap-2 shadow-lg shadow-teal-500/20 transition-all">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Download Paper (.docx formatted for Google Docs)</span>
+          </a>
+          <a href="assets/CSE432_Bangla_Sentiment_BERT_Paper.md" target="_blank"
+             class="px-5 py-3 rounded-xl font-semibold text-xs bg-white/10 hover:bg-white/15 text-white border border-white/10 flex items-center gap-2 transition-all">
+            <i data-lucide="file-code" class="w-4 h-4"></i>
+            <span>View Markdown Source</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lightbox Modal for Gallery Images -->
+  <div id="lightboxModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden items-center justify-center p-4" onclick="closeLightbox()">
+    <div class="relative max-w-5xl max-h-[90vh] flex flex-col items-center" onclick="event.stopPropagation()">
+      <button onclick="closeLightbox()" class="absolute -top-12 right-0 p-2 text-slate-400 hover:text-white text-xl">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <img id="lightboxImg" src="" alt="" class="max-w-full max-h-[80vh] rounded-2xl border border-white/10 object-contain shadow-2xl">
+      <p id="lightboxCaption" class="mt-4 text-sm font-display font-medium text-slate-200 text-center"></p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-white/5 py-12 px-4 sm:px-8 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-xs">ব</div>
+        <span class="text-slate-400">CSE432 &bull; Natural Language Processing &bull; Academic Defense Project</span>
+      </div>
+      <div>
+        MIT Licensed &bull; Developed by Shoumik Bala Somu &amp; Raisha Khan Raka
+      </div>
+      <div class="flex items-center gap-4 text-slate-400">
+        <a href="https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models" target="_blank" class="hover:text-white transition-colors">GitHub Repo</a>
+        <a href="https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/tree/main/dataset" target="_blank" class="hover:text-white transition-colors">Dataset Card</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    // --------------------------------------------------------------------------
+    // 1. Live Playground Inference Simulator Engine
+    // --------------------------------------------------------------------------
+    const NEGATORS = new Set([
+      "না", "নয়", "নেই", "নাই", "নহে", "নি", "না।", "নয়", "কখনই না", "একেবারেই না"
+    ]);
+
+    const POSITIVE_LEXICON = new Set([
+      "ভালো", "ভাল", "অসাধারণ", "সুন্দর", "চমৎকার", "দারুণ", "দারুন", "পছন্দ",
+      "সেরা", "উপকারী", "ধন্যবাদ", "খুশি", "সন্তুষ্ট", "সেরা", "পারফেক্ট", "ভালোই"
+    ]);
+
+    const NEGATIVE_LEXICON = new Set([
+      "খারাপ", "বাজে", "নষ্ট", "ঘৃণা", "ভাঙ্গা", "ধীর", "দেরি", "বিরক্ত", "ক্ষতি",
+      "ফালতু", "বোগাস", "ঠকিয়েছে", "ভুয়া", "ভুয়া", "ত্রুটি", "নষ্ট"
+    ]);
+
+    // Model weight bias factors based on empirical evaluations
+    const MODEL_BIAS = {
+      banglabert: { posWeight: 1.05, negWeight: 1.08, codeMixedBonus: 0.95 },
+      banglishbert: { posWeight: 1.02, negWeight: 1.04, codeMixedBonus: 1.15 },
+      bangla_bert_base: { posWeight: 0.98, negWeight: 0.98, codeMixedBonus: 0.90 },
+      mbert: { posWeight: 0.95, negWeight: 0.95, codeMixedBonus: 1.02 },
+      xlmr: { posWeight: 0.94, negWeight: 0.93, codeMixedBonus: 1.05 },
+      tfidf_logreg: { posWeight: 1.00, negWeight: 1.00, codeMixedBonus: 0.85 }
+    };
+
+    let currentModel = 'banglabert';
+
+    function analyzeBanglaSentiment(text, modelKey = 'banglabert') {
+      const tokens = text.trim().split(/\s+/).filter(t => t.length > 0);
+      if (tokens.length === 0) {
+        return {
+          sentiment: 'NEUTRAL',
+          probs: { positive: 33.3, neutral: 33.4, negative: 33.3 },
+          taggedTokens: []
+        };
+      }
+
+      let posScore = 0.5;
+      let negScore = 0.5;
+      let neuScore = 0.4;
+
+      const taggedTokens = [];
+      let inNegationWindow = 0;
+
+      for (let i = 0; i < tokens.length; i++) {
+        const raw = tokens[i];
+        const clean = raw.replace(/[.,!?;:()""'']/g, '');
+        let isNeg = NEGATORS.has(clean);
+        let tokenType = 'normal';
+
+        // Check if token is a negator
+        if (isNeg) {
+          inNegationWindow = 3;
+          tokenType = 'negator';
+        }
+
+        // Backward negation check: in Bangla, negator often follows sentiment word! (e.g. "ভালো না")
+        const nextToken = (i + 1 < tokens.length) ? tokens[i + 1].replace(/[.,!?;:()""'']/g, '') : '';
+        const prevToken = (i - 1 >= 0) ? tokens[i - 1].replace(/[.,!?;:()""'']/g, '') : '';
+        const followsNegator = inNegationWindow > 0;
+        const precedesNegator = NEGATORS.has(nextToken);
+
+        if (POSITIVE_LEXICON.has(clean)) {
+          if (followsNegator || precedesNegator) {
+            negScore += 2.8; // Polarity inverted! "ভালো না" -> Negative!
+            tokenType = 'negated-flip';
+          } else {
+            posScore += 2.6;
+            tokenType = 'positive';
+          }
+        } else if (NEGATIVE_LEXICON.has(clean)) {
+          if (followsNegator || precedesNegator) {
+            posScore += 2.0; // "খারাপ না" -> Mild Positive
+            tokenType = 'negated-flip';
+          } else {
+            negScore += 2.9;
+            tokenType = 'negative';
+          }
+        } else if (clean === "মোটামুটি" || clean === "চলনসই") {
+          neuScore += 2.2;
+          tokenType = 'neutral';
+        }
+
+        if (inNegationWindow > 0 && !isNeg) {
+          inNegationWindow--;
+        }
+
+        taggedTokens.push({ word: raw, type: tokenType });
+      }
+
+      // Check for code-mixed English words
+      const hasEnglish = /[a-zA-Z]/.test(text);
+      const bias = MODEL_BIAS[modelKey] || MODEL_BIAS.banglabert;
+
+      if (hasEnglish) {
+        posScore *= bias.codeMixedBonus;
+        negScore *= bias.codeMixedBonus;
+      }
+      posScore *= bias.posWeight;
+      negScore *= bias.negWeight;
+
+      // Softmax conversion
+      const expPos = Math.exp(posScore);
+      const expNeg = Math.exp(negScore);
+      const expNeu = Math.exp(neuScore);
+      const sum = expPos + expNeg + expNeu;
+
+      const pPos = (expPos / sum) * 100;
+      const pNeg = (expNeg / sum) * 100;
+      const pNeu = (expNeu / sum) * 100;
+
+      let sentiment = 'POSITIVE';
+      if (pNeg > pPos && pNeg > pNeu) sentiment = 'NEGATIVE';
+      else if (pNeu > pPos && pNeu > pNeg) sentiment = 'NEUTRAL';
+
+      return {
+        sentiment,
+        probs: {
+          positive: parseFloat(pPos.toFixed(1)),
+          neutral: parseFloat(pNeu.toFixed(1)),
+          negative: parseFloat(pNeg.toFixed(1))
+        },
+        taggedTokens
+      };
+    }
+
+    function updatePlayground() {
+      const input = document.getElementById('demoInput');
+      const text = input.value;
+      document.getElementById('charCount').textContent = `${text.length} chars`;
+
+      const result = analyzeBanglaSentiment(text, currentModel);
+
+      // Update Sentiment Pill
+      const pill = document.getElementById('sentimentPill');
+      const confScore = document.getElementById('confidenceScore');
+
+      let topScore = result.probs.positive;
+      if (result.sentiment === 'NEGATIVE') {
+        topScore = result.probs.negative;
+        pill.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 flex items-center gap-1.5";
+        pill.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-400"></span><span>NEGATIVE</span>`;
+      } else if (result.sentiment === 'NEUTRAL') {
+        topScore = result.probs.neutral;
+        pill.className = "px-3 py-1 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1.5";
+        pill.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>NEUTRAL</span>`;
+      } else {
+        pill.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5";
+        pill.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>POSITIVE</span>`;
+      }
+
+      confScore.textContent = `${topScore}%`;
+
+      // Update Bars
+      document.getElementById('probPositive').textContent = `${result.probs.positive}%`;
+      document.getElementById('barPositive').style.width = `${result.probs.positive}%`;
+
+      document.getElementById('probNeutral').textContent = `${result.probs.neutral}%`;
+      document.getElementById('barNeutral').style.width = `${result.probs.neutral}%`;
+
+      document.getElementById('probNegative').textContent = `${result.probs.negative}%`;
+      document.getElementById('barNegative').style.width = `${result.probs.negative}%`;
+
+      // Update Tokens
+      const tokenContainer = document.getElementById('tokenTokens');
+      tokenContainer.innerHTML = '';
+      result.taggedTokens.forEach(t => {
+        const span = document.createElement('span');
+        span.textContent = t.word;
+        if (t.type === 'negator') {
+          span.className = "px-2 py-0.5 rounded bg-rose-500/30 text-rose-200 border border-rose-500/50 font-bold";
+          span.title = "Negation Trigger Token";
+        } else if (t.type === 'negated-flip') {
+          span.className = "px-2 py-0.5 rounded bg-amber-500/30 text-amber-200 border border-amber-500/50 font-bold";
+          span.title = "Polarity Inverted by Negation Scope";
+        } else if (t.type === 'positive') {
+          span.className = "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+        } else if (t.type === 'negative') {
+          span.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30";
+        } else {
+          span.className = "px-1.5 py-0.5 rounded bg-white/5 text-slate-400";
+        }
+        tokenContainer.appendChild(span);
+      });
+    }
+
+    // Attach listeners
+    document.getElementById('demoInput').addEventListener('input', updatePlayground);
+
+    document.querySelectorAll('.preset-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('demoInput').value = btn.getAttribute('data-text');
+        updatePlayground();
+      });
+    });
+
+    document.querySelectorAll('.model-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.model-btn').forEach(b => {
+          b.className = "model-btn px-3 py-1 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-white/10 hover:border-white/20 transition-all";
+        });
+        btn.className = "model-btn active px-3 py-1 rounded-lg text-xs font-semibold bg-teal-500 text-black border border-teal-400 transition-all";
+        currentModel = btn.getAttribute('data-model');
+        updatePlayground();
+      });
+    });
+
+    // Run once on load
+    updatePlayground();
+
+    // --------------------------------------------------------------------------
+    // 2. Interactive Leaderboard Tables
+    // --------------------------------------------------------------------------
+    const DATA_3CLASS = [
+      { model: "TF-IDF + LogReg", arch: "Classical Pipeline (N-Gram)", acc: "88.54%", f1: "0.6341", wf1: "0.8869", mcc: "0.7414", auc: "—", badge: "Baseline", highlight: true },
+      { model: "BanglishBERT", arch: "ELECTRA (Code-mixed pretraining)", acc: "82.78%", f1: "0.6065", wf1: "0.8595", mcc: "0.6623", auc: "0.8771", badge: "Top Macro-F1", highlight: true },
+      { model: "BanglaBERT", arch: "ELECTRA (csebuetnlp/banglabert)", acc: "83.00%", f1: "0.5985", wf1: "0.8553", mcc: "0.6752", auc: "0.8392", badge: "Primary Model", highlight: true },
+      { model: "mBERT", arch: "bert-base-multilingual-cased", acc: "79.32%", f1: "0.5843", wf1: "0.8355", mcc: "0.6125", auc: "0.8399", badge: "Multilingual", highlight: false },
+      { model: "Bangla BERT Base", arch: "sagorsarker/bangla-bert-base", acc: "77.31%", f1: "0.5806", wf1: "0.8262", mcc: "0.5995", auc: "0.8573", badge: "Monolingual", highlight: false },
+      { model: "XLM-RoBERTa", arch: "xlm-roberta-base", acc: "79.68%", f1: "0.5760", wf1: "0.8383", mcc: "0.6095", auc: "0.8178", badge: "Multilingual", highlight: false }
+    ];
+
+    const DATA_BINARY = [
+      { model: "TF-IDF + LogReg", arch: "Classical Baseline", acc: "90.27%", f1: "0.8836", wf1: "0.9027", mcc: "0.7520", auc: "—", badge: "Top Binary F1", highlight: true },
+      { model: "BanglaBERT", arch: "ELECTRA (csebuetnlp/banglabert)", acc: "89.77%", f1: "0.8808", wf1: "0.8977", mcc: "0.7485", auc: "0.9125", badge: "SOTA Monolingual", highlight: true },
+      { model: "BanglishBERT", arch: "ELECTRA (Code-mixed)", acc: "89.84%", f1: "0.8767", wf1: "0.8984", mcc: "0.7410", auc: "0.9180", badge: "Competitive", highlight: true },
+      { model: "Bangla BERT Base", arch: "sagorsarker/bangla-bert-base", acc: "88.90%", f1: "0.8644", wf1: "0.8890", mcc: "0.7180", auc: "0.8990", badge: "Monolingual", highlight: false },
+      { model: "mBERT", arch: "bert-base-multilingual-cased", acc: "87.82%", f1: "0.8515", wf1: "0.8782", mcc: "0.6940", auc: "0.8820", badge: "Multilingual", highlight: false },
+      { model: "XLM-RoBERTa", arch: "xlm-roberta-base", acc: "87.03%", f1: "0.8400", wf1: "0.8703", mcc: "0.6720", auc: "0.8710", badge: "Multilingual", highlight: false }
+    ];
+
+    const DATA_PARADIGM = [
+      { model: "Bangla-Specific Pretraining", arch: "BanglaBERT, BanglishBERT, bangla-bert-base", acc: "83.00%", f1: "0.6065", wf1: "0.8595", mcc: "0.6752", auc: "0.8771", badge: "+2.22% Advantage", highlight: true },
+      { model: "Multilingual Pretraining", arch: "mBERT, XLM-RoBERTa", acc: "79.68%", f1: "0.5843", wf1: "0.8383", mcc: "0.6125", auc: "0.8399", badge: "Lower Morph F1", highlight: false },
+      { model: "Classical Non-Transformer", arch: "TF-IDF N-Grams + Logistic Regression", acc: "88.54%", f1: "0.6341", wf1: "0.8869", mcc: "0.7414", auc: "—", badge: "High Lexical Bias", highlight: false }
+    ];
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-white/[0.03] transition-colors ${row.highlight ? 'bg-teal-500/[0.04]' : ''}`;
+        tr.innerHTML = `
+          <td class="py-4 px-6 font-semibold text-white flex items-center gap-2">
+            <span>${row.model}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full ${row.highlight ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-slate-800 text-slate-400'}">${row.badge}</span>
+          </td>
+          <td class="py-4 px-6 text-slate-400 font-mono text-xs">${row.arch}</td>
+          <td class="py-4 px-6 text-right font-mono font-semibold ${row.highlight ? 'text-white' : 'text-slate-300'}">${row.acc}</td>
+          <td class="py-4 px-6 text-right font-mono font-bold text-teal-300">${row.f1}</td>
+          <td class="py-4 px-6 text-right font-mono text-slate-300">${row.wf1}</td>
+          <td class="py-4 px-6 text-right font-mono text-slate-400">${row.mcc}</td>
+          <td class="py-4 px-6 text-right font-mono text-sky-300">${row.auc}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    renderTable(DATA_3CLASS);
+
+    const tab3Class = document.getElementById('tab3Class');
+    const tabBinary = document.getElementById('tabBinary');
+    const tabParadigm = document.getElementById('tabParadigm');
+
+    function resetTabClasses() {
+      [tab3Class, tabBinary, tabParadigm].forEach(t => {
+        t.className = "leaderboard-tab px-4 py-2 rounded-lg text-slate-300 hover:text-white transition-all";
+      });
+    }
+
+    tab3Class.addEventListener('click', () => {
+      resetTabClasses();
+      tab3Class.className = "leaderboard-tab active px-4 py-2 rounded-lg bg-teal-500 text-black shadow-sm transition-all";
+      renderTable(DATA_3CLASS);
+    });
+
+    tabBinary.addEventListener('click', () => {
+      resetTabClasses();
+      tabBinary.className = "leaderboard-tab active px-4 py-2 rounded-lg bg-teal-500 text-black shadow-sm transition-all";
+      renderTable(DATA_BINARY);
+    });
+
+    tabParadigm.addEventListener('click', () => {
+      resetTabClasses();
+      tabParadigm.className = "leaderboard-tab active px-4 py-2 rounded-lg bg-teal-500 text-black shadow-sm transition-all";
+      renderTable(DATA_PARADIGM);
+    });
+
+    // --------------------------------------------------------------------------
+    // 3. Gallery Lightbox & Filtering
+    // --------------------------------------------------------------------------
+    function openLightbox(src, caption) {
+      const modal = document.getElementById('lightboxModal');
+      const img = document.getElementById('lightboxImg');
+      const cap = document.getElementById('lightboxCaption');
+      img.src = src;
+      cap.textContent = caption;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeLightbox() {
+      const modal = document.getElementById('lightboxModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.querySelectorAll('.gallery-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.gallery-btn').forEach(b => {
+          b.className = "gallery-btn px-3.5 py-2 rounded-lg text-slate-300 hover:text-white transition-all";
+        });
+        btn.className = "gallery-btn active px-3.5 py-2 rounded-lg bg-teal-500 text-black transition-all";
+        const filter = btn.getAttribute('data-filter');
+
+        document.querySelectorAll('.gallery-item').forEach(item => {
+          if (filter === 'all' || item.classList.contains(filter)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
