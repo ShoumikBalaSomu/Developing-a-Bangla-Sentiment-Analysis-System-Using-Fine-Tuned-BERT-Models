@@ -78,6 +78,9 @@ flowchart LR
     B --> C["Length & Script Filter\n(Bangla Script ≥ 40%)"]
     C --> D["Deduplication\n(8,573 clean rows)"]
     D --> E["Stratified Split & Cap\n(train: 5,797 | val: 1,388 | test: 1,388)"]
+
+    classDef default fill:#ffffff,stroke:#334155,stroke-width:1.5px,color:#0f172a
+    linkStyle default stroke:#1e293b,stroke-width:2.5px
 ```
 
 ### 3.1 Supervised Pool Attrition

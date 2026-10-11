@@ -81,10 +81,13 @@ flowchart TD
         F1 & F2 --> G3["docs/index.html (Live Interactive Showcase)"]
     end
 
-    style Data_Acquisition fill:#0f172a,stroke:#38bdf8,stroke-width:1px,color:#f8fafc
-    style Preprocessing_Pipeline fill:#0f172a,stroke:#2dd4bf,stroke-width:1px,color:#f8fafc
-    style Model_Training fill:#0f172a,stroke:#a855f7,stroke-width:1px,color:#f8fafc
-    style Evaluation_Reporting fill:#0f172a,stroke:#34d399,stroke-width:1px,color:#f8fafc
+    classDef default fill:#ffffff,stroke:#334155,stroke-width:1.5px,color:#0f172a
+    linkStyle default stroke:#1e293b,stroke-width:2.5px
+
+    style Data_Acquisition fill:#f0f9ff,stroke:#0284c7,stroke-width:2px,color:#0369a1
+    style Preprocessing_Pipeline fill:#f0fdfa,stroke:#0d9488,stroke-width:2px,color:#0f766e
+    style Model_Training fill:#faf5ff,stroke:#9333ea,stroke-width:2px,color:#7e22ce
+    style Evaluation_Reporting fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
 ```
 
 ---
