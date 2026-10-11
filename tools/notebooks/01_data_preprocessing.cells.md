@@ -41,7 +41,7 @@ REPO_URL = "https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Ana
 REPO_NAME = REPO_URL.rstrip("/").split("/")[-1].replace(".git", "")
 
 IN_COLAB = Path("/content").exists()
-ROOT = Path("/content") / REPO_NAME if IN_COLAB else Path.cwd().parent
+ROOT = Path("/content") / REPO_NAME if IN_COLAB else (Path.cwd() if (Path.cwd() / "src" / "config.py").exists() else Path.cwd().parent)
 
 if IN_COLAB and not ROOT.exists():
     os.system(f"git clone --depth 1 {REPO_URL} {ROOT}")
@@ -177,7 +177,7 @@ args = f"--max-rows {MAX_ROWS}"
 if SKIP_KAGGLE:
     args += " --skip-kaggle"
 
-os.system(f"python src/download_datasets.py {args}")
+os.system(f"{sys.executable} src/download_datasets.py {args}")
 ###CELL code###
 #@title 3.2 What actually arrived
 import pandas as pd
@@ -322,7 +322,7 @@ for s in demo:
     print(f"  {s}\n    -> {tag_negation(s, negset)}\n")
 ###CELL code###
 #@title 5.4 Literature-review entries filtered from bangla-nlp-catalog
-os.system("python src/catalog_to_lr.py --top 40")
+os.system(f"{sys.executable} src/catalog_to_lr.py --top 40")
 
 if ARTIFACTS["lr_table"].exists():
     lr = pd.read_csv(ARTIFACTS["lr_table"])

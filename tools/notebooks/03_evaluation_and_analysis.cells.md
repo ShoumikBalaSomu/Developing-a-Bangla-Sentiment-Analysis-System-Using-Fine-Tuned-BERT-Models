@@ -48,7 +48,7 @@ REPO_URL = "https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Ana
 REPO_NAME = REPO_URL.rstrip("/").split("/")[-1].replace(".git", "")
 
 IN_COLAB = Path("/content").exists()
-ROOT = Path("/content") / REPO_NAME if IN_COLAB else Path.cwd().parent
+ROOT = Path("/content") / REPO_NAME if IN_COLAB else (Path.cwd() if (Path.cwd() / "src" / "config.py").exists() else Path.cwd().parent)
 
 if IN_COLAB and not ROOT.exists():
     os.system(f"git clone --depth 1 {REPO_URL} {ROOT}")
@@ -113,12 +113,16 @@ if not available:
 ###CELL code###
 #@title 2.1 Evaluate every available checkpoint + the TF-IDF baseline
 RUN_BASELINE = True  #@param {type:"boolean"}
+RECOMPUTE_EVAL = False  #@param {type:"boolean"}
 
 import importlib, evaluate as eval_mod
 importlib.reload(eval_mod)
 from evaluate import evaluate_all
 
-if available:
+if Path(ARTIFACTS["metrics"]).exists() and not RECOMPUTE_EVAL:
+    table = pd.read_csv(ARTIFACTS["metrics"])
+    print(f"Loaded existing evaluation metrics for {len(table)} models from {ARTIFACTS['metrics']}")
+elif available:
     table = evaluate_all(available, baseline=RUN_BASELINE)
 else:
     table = pd.DataFrame()
@@ -207,10 +211,24 @@ SLICE_MODEL = "banglabert"  #@param {type:"string"}
 
 from evaluate import load_test, predict_proba, slice_analysis
 
-if (CHECKPOINT_DIR / SLICE_MODEL.replace("/", "__") / "best").exists():
+safe_slice = SLICE_MODEL.replace("/", "__")
+ckpt_dir = CHECKPOINT_DIR / safe_slice
+p_cache = ckpt_dir / "test_probs.npy"
+
+if (ckpt_dir / "best").exists():
     df_test = load_test()
     y_true = df_test["label_id"].astype(int).to_numpy()
-    proba = predict_proba(SLICE_MODEL, df_test)
+    if p_cache.exists():
+        import numpy as np
+        proba = np.load(p_cache)
+        print(f"Loaded probabilities from {p_cache}")
+    else:
+        proba = predict_proba(SLICE_MODEL, df_test)
+        try:
+            import numpy as np
+            np.save(p_cache, proba)
+        except Exception:
+            pass
     y_pred = proba.argmax(axis=1)
     slices = slice_analysis(df_test, y_true, y_pred)
 
@@ -282,6 +300,15 @@ if Path(ARTIFACTS["metrics"]).exists():
         plot_grouped_bars(m, "macro_f1", "Macro-F1 by model", RESULTS_DIR / "bar_macro_f1.png")
         plot_grouped_bars(m, "accuracy", "Accuracy by model", RESULTS_DIR / "bar_accuracy.png")
         figs += ["bar_macro_f1.png", "bar_accuracy.png"]
+
+# Display all available diagnostic figures
+for other in ["banglishbert", "bangla_bert_base", "mbert", "xlmr"]:
+    cf = f"confusion_{other}.png"
+    rf = f"roc_{other}.png"
+    if (RESULTS_DIR / cf).exists() and cf not in figs:
+        figs.append(cf)
+    if (RESULTS_DIR / rf).exists() and rf not in figs:
+        figs.append(rf)
 
 for f in figs:
     p = RESULTS_DIR / f

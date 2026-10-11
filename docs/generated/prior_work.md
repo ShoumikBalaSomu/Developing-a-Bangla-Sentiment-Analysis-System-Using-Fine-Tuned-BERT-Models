@@ -18,10 +18,6 @@
 | nan | 2023 | ser | nan | [link](https://data.mendeley.com/datasets/vsn37ps3rx/4) |
 | nan | 2023 | sentiment | nan | [link](https://github.com/mohsinulkabir14/BanglaBook) |
 | nan | 2022 | ser | nan | [link](https://data.mendeley.com/datasets/t9h6p943xy/5) |
-| nan | 2022 | sentiment | nan | [link](https://github.com/avishek-018/BEmoC) |
-| nan | 2021 | sentiment | nan | [link](https://github.com/KhondokerIslam/SentNoB) |
-| nan | 2021 | ser | nan | [link](https://doi.org/10.5281/zenodo.4526477) |
-| nan | 2018 | sentiment | nan | [link](https://github.com/AtikRahman/Bangla_ABSA_Datasets) |
 
 ### Model (1)
 
@@ -43,11 +39,6 @@
 | A Multi-Model Approach to English-Bangla Sentiment Classification of Government Mobile Banking App Reviews | 2026 | sentiment | arXiv | [link](http://arxiv.org/abs/2604.13057) |
 | BABSA: A large scale bangla aspect based sentiment analysis dataset | 2026 | sentiment | Data in Brief | [link](https://pmc.ncbi.nlm.nih.gov/articles/PMC12962122/) |
 | BAN-ASTE: A unified neural framework for Bengali aspect sentiment triplet extraction | 2026 | sentiment | Natural Language Processing Journal | [link](https://doi.org/10.1016/j.nlp.2026.100216) |
-| Bengali Emotion Classification from Social Media Text Using Deep Learning and Transformer-Based Models with Ex | 2026 | sentiment | Journal of Engineering Research and Scie | [link](https://doi.org/10.55708/js0506004) |
-| Bangla Suicidal Ideation Detection: Performance and Efficiency Benchmark of Simple and Complex Classifiers on  | 2026 | sentiment | The Journal of Applied Technology and In | [link](https://doi.org/10.65136/jati.v10i1.11) |
-| What’s on Your Mind? - Mental Health Disorder Risk Detection From Bangla Social Media Text Using Weighted Ense | 2026 | sentiment | Journal of Technology in Behavioral Scie | [link](https://doi.org/10.1007/s41347-026-00614-6) |
-| When Words Don't Mean What They Say: Figurative Understanding in Bengali Idioms | 2026 | sentiment | arXiv | [link](http://arxiv.org/abs/2602.12921) |
-| Enhancing Mental Health Counseling Support in Bangladesh using Culturally-grounded Knowledge | 2026 | sentiment | CLP | [link](https://aclanthology.org/2026.clpsych-1.13/) |
 
 ### Tool (1)
 

@@ -22,6 +22,8 @@
 
 *Produced by Notebook 01 §4.2 and Notebook 03 §5.2.*
 
+![Figure 4.1: Label distribution across splits](../results/label_distribution.png)
+
 | Label | Train | Val | Test |
 |---|---|---|---|
 | negative | 1,816 | 389 | 389 |
@@ -226,6 +228,10 @@ Include the generated tables from `docs/generated/prior_work.md` in the report a
 | Classical | `tfidf_logreg` | 0.6341 | 0.6341 | 0.8854 |
 
 **Macro-F1 gap (Bangla-specific best − multilingual best):** +0.0222 (+2.22 percentage points)
+ 
+![Figure 4.2: Macro-F1 comparison across models](../results/bar_macro_f1.png)
+ 
+![Figure 4.3: Accuracy comparison across models](../results/bar_accuracy.png)
 
 *(interpretation guidance)* This is the project's central empirical question. Report the gap **with its sign**, whatever it is.
 
@@ -298,7 +304,7 @@ If accuracy *plateaus* or *drops* at 41+, that suggests `max_seq_len = 128` is t
 
 ### 4.8.1 Confusion matrix
 
-*Figure: `results/confusion_banglabert.png` — counts and row-normalised side by side.*
+![Figure 4.4: BanglaBERT Confusion Matrix (Counts and Row-Normalised)](../results/confusion_banglabert.png)
 
 | True ↓ / Pred → | negative | neutral | positive |
 |---|---|---|---|
@@ -331,7 +337,7 @@ Read `results/errors_banglabert.csv` by hand and categorise. Suggested categorie
 
 ### 4.8.3 ROC analysis
 
-*Figure: `results/roc_banglabert.png` — one-vs-rest curves with per-class AUC.*
+![Figure 4.5: BanglaBERT One-vs-Rest ROC Curves with Per-Class AUC](../results/roc_banglabert.png)
 
 | Model | AUC (negative) | AUC (neutral) | AUC (positive) | Macro AUC |
 |---|---|---|---|---|

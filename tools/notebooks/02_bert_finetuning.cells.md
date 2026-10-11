@@ -41,7 +41,7 @@ REPO_URL = "https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Ana
 REPO_NAME = REPO_URL.rstrip("/").split("/")[-1].replace(".git", "")
 
 IN_COLAB = Path("/content").exists()
-ROOT = Path("/content") / REPO_NAME if IN_COLAB else Path.cwd().parent
+ROOT = Path("/content") / REPO_NAME if IN_COLAB else (Path.cwd() if (Path.cwd() / "src" / "config.py").exists() else Path.cwd().parent)
 
 if IN_COLAB and not ROOT.exists():
     os.system(f"git clone --depth 1 {REPO_URL} {ROOT}")
@@ -155,13 +155,24 @@ Run 3.1 for a single model, or 3.2 to sweep the whole registry.
 #@title 3.1 Train ONE model
 MODEL_KEY = "banglabert"  #@param ["banglabert","bangla_bert_base","banglishbert","mbert","xlmr"]
 
-import importlib, train as train_mod
+import importlib, json
+from config import CHECKPOINT_DIR
+import train as train_mod
 importlib.reload(train_mod)
 from train import train_one, append_metrics
 
-flat = train_one(MODEL_KEY, epochs=EPOCHS, subset=SUBSET or None,
-                 use_weights=USE_CLASS_WEIGHTS)
-append_metrics(flat)
+ckpt = CHECKPOINT_DIR / MODEL_KEY.replace("/", "__") / "best"
+metrics_file = CHECKPOINT_DIR / MODEL_KEY.replace("/", "__") / "metrics.json"
+
+if ckpt.exists() and metrics_file.exists() and SUBSET == 0:
+    print(f"Checkpoint already trained at {ckpt}.")
+    flat = json.loads(metrics_file.read_text(encoding="utf-8"))
+    print("\nTrained model evaluation metrics on held-out test split:")
+    print(json.dumps({k: v for k, v in flat.items() if isinstance(v, (int, float, str))}, indent=2))
+else:
+    flat = train_one(MODEL_KEY, epochs=EPOCHS, subset=SUBSET or None,
+                     use_weights=USE_CLASS_WEIGHTS)
+    append_metrics(flat)
 ###CELL code###
 #@title 3.2 Or sweep the whole registry
 RUN_ALL = False  #@param {type:"boolean"}
@@ -223,10 +234,10 @@ else:
 #@title 3.4 Show accumulated metrics
 if Path(ARTIFACTS["metrics"]).exists():
     m = pd.read_csv(ARTIFACTS["metrics"])
-    cols = [c for c in ("model_key", "hf_id", "epochs", "n_train", "test_accuracy",
-                        "test_macro_f1", "test_weighted_f1") if c in m.columns]
+    cols = [c for c in ("model", "accuracy", "balanced_accuracy", "macro_f1",
+                        "weighted_f1", "mcc", "macro_auc") if c in m.columns]
     with pd.option_context("display.max_columns", 20, "display.width", 160):
-        print(m[cols].to_string(index=False))
+        print(m[cols].round(4).to_string(index=False))
 else:
     print("no metrics yet")
 ###CELL md###

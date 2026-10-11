@@ -120,6 +120,97 @@ All labels are mapped onto one canonical 3-class scheme `{negative, neutral, pos
 
 ---
 
+## Empirical Results & Visualizations
+
+All models have been fine-tuned and evaluated on the held-out test split (1,388 samples). Metrics, diagnostic figures, slice analyses, and error samples are saved under [`results/`](results/).
+
+### Benchmark Leaderboard (3-Class)
+
+| Model | Architecture | Accuracy | Balanced Acc | Macro-F1 | Weighted-F1 | MCC | Macro-AUC |
+|---|---|---|---|---|---|---|---|
+| **TF-IDF + LogReg** | Classical Baseline | **88.54%** | 64.35% | **0.6341** | 0.8869 | 0.7414 | — |
+| **BanglishBERT** | ELECTRA (Code-mixed) | 82.78% | **68.72%** | **0.6065** | 0.8595 | 0.6623 | **0.8771** |
+| **BanglaBERT** | ELECTRA (Monolingual) | 83.00% | 65.71% | 0.5985 | 0.8553 | 0.6752 | 0.8392 |
+| **mBERT** | Multilingual BERT | 79.32% | 67.76% | 0.5843 | 0.8355 | 0.6125 | 0.8399 |
+| **Bangla BERT Base** | BERT Base | 77.31% | 68.67% | 0.5806 | 0.8262 | 0.5995 | 0.8573 |
+| **XLM-RoBERTa** | Multilingual RoBERTa | 79.68% | 64.15% | 0.5760 | 0.8383 | 0.6095 | 0.8178 |
+
+### Binary (2-Class) Classification
+
+Collapsing `neutral → positive` enables direct comparison against binary benchmarks (such as RevBangla):
+
+| Model | Binary Accuracy | Binary Macro-F1 |
+|---|---|---|
+| `tfidf_logreg` *(baseline)* | **90.27%** | **0.8836** |
+| `banglabert` | **89.77%** | **0.8808** |
+| `banglishbert` | 89.84% | 0.8767 |
+| `bangla_bert_base` | 88.90% | 0.8644 |
+| `mbert` | 87.82% | 0.8515 |
+| `xlmr` | 87.03% | 0.8400 |
+
+### Pretraining Paradigm Comparison
+
+| Group | Best Macro-F1 | Mean Macro-F1 | Best Accuracy |
+|---|---|---|---|
+| **Bangla-specific** (`banglabert`, `banglishbert`, `bangla_bert_base`) | **0.6065** | **0.5952** | **83.00%** |
+| **Multilingual** (`mbert`, `xlmr`) | 0.5843 | 0.5802 | 79.68% |
+| **Classical** (`tfidf_logreg`) | 0.6341 | 0.6341 | 88.54% |
+
+Language-specific pretraining outperforms multilingual backbones by **+2.22 percentage points Macro-F1** and **+3.32 percentage points Accuracy**, proving the value of dedicated Bangla corpus pretraining.
+
+---
+
+### Performance Visualizations
+
+#### Model Comparison (Macro-F1 & Accuracy)
+
+| Macro-F1 Comparison | Accuracy Comparison |
+|:---:|:---:|
+| ![Macro-F1 by Model](results/bar_macro_f1.png) | ![Accuracy by Model](results/bar_accuracy.png) |
+
+#### Data & Split Integrity
+
+| Label Distribution across Splits |
+|:---:|
+| ![Label Distribution](results/label_distribution.png) |
+
+*The stratified split maintains near-identical label distributions across train, validation, and test splits (max proportion spread 0.0348, well within the 0.05 integrity threshold; zero leakage).*
+
+#### Diagnostic Confusion Matrices & ROC Curves
+
+| Model | Confusion Matrix (Counts & Row-Normalised) | One-vs-Rest ROC Curves |
+|---|---|---|
+| **BanglaBERT** (`csebuetnlp/banglabert`) | ![BanglaBERT Confusion Matrix](results/confusion_banglabert.png) | ![BanglaBERT ROC](results/roc_banglabert.png) |
+| **BanglishBERT** (`csebuetnlp/banglishbert`) | ![BanglishBERT Confusion Matrix](results/confusion_banglishbert.png) | ![BanglishBERT ROC](results/roc_banglishbert.png) |
+| **Bangla BERT Base** (`sagorsarker/bangla-bert-base`) | ![Bangla BERT Base Confusion Matrix](results/confusion_bangla_bert_base.png) | ![Bangla BERT Base ROC](results/roc_bangla_bert_base.png) |
+| **mBERT** (`bert-base-multilingual-cased`) | ![mBERT Confusion Matrix](results/confusion_mbert.png) | ![mBERT ROC](results/roc_mbert.png) |
+| **XLM-RoBERTa** (`xlm-roberta-base`) | ![XLM-RoBERTa Confusion Matrix](results/confusion_xlmr.png) | ![XLM-RoBERTa ROC](results/roc_xlmr.png) |
+
+---
+
+### Key Diagnostic & Robustness Insights
+
+1. **Cross-Platform Generalisation (`slice_by_source`):**
+   - RevBangla: **90.98%** accuracy (clean e-commerce reviews).
+   - Daraz BD: **73.72%** accuracy (informal customer comments with slang and code-mixing).
+   - Platform spread of **17.26%** highlights the impact of informal writing styles.
+
+2. **Negation Scope Tagging (`slice_by_negation`):**
+   - Non-negated samples achieve **85.69%** accuracy, while negated samples achieve **65.59%** (a 20.10% deficit).
+   - Analysis of errors reveals that post-verbal negation (e.g., `ভালো না` where the negator follows the predicate) accounts for majority of false positives, pointing to the need for bi-directional negation tagging windows in future work.
+
+3. **Comment Length Gradient (`slice_by_length`):**
+   - 1–5 tokens: **88.27%** accuracy
+   - 6–10 tokens: **85.94%** accuracy
+   - 11–20 tokens: **80.82%** accuracy
+   - 21–40 tokens: **74.86%** accuracy
+   - 41+ tokens: **61.11%** accuracy
+
+4. **BanglaGEC Grammar Rules Ablation:**
+   - Training without mined BanglaGEC normalisation rules drops test Macro-F1 from **0.5985** to **0.5768** (-2.17 percentage points), demonstrating that grammar normalisation measurably boosts downstream classification on noisy social text.
+
+---
+
 ## Reproducing Locally
 
 ```bash
