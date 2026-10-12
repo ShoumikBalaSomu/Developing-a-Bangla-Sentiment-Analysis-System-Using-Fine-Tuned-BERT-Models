@@ -137,12 +137,20 @@ def build_markdown(df: pd.DataFrame, keyword: str, top: int) -> str:
         lines.append("| " + " | ".join(head) + " |")
         lines.append("|" + "|".join(["---"] * len(head)) + "|")
         for _, r in sub.head(max(5, top // 4)).iterrows():
-            title = str(r[title_c]).replace("|", "\\|")[:110]
-            year = str(int(r["__year"])) if year_c and pd.notna(r.get("__year")) else ""
-            task = str(r[task_c]).replace("|", "/")[:40] if task_c else ""
-            venue = str(r[venue_c]).replace("|", "\\|")[:40] if venue_c else ""
+            raw_title = r.get(title_c)
+            if pd.isna(raw_title) or str(raw_title).strip().lower() in ("nan", "", "none"):
+                raw_title = r.get("name") if pd.notna(r.get("name")) else (r.get("id") if pd.notna(r.get("id")) else r.get("desc"))
+            title = str(raw_title or "Untitled").replace("|", "\\|")[:110]
+
+            year = str(int(r["__year"])) if year_c and pd.notna(r.get("__year")) else "-"
+            task_val = r.get(task_c) if task_c else None
+            task = str(task_val).replace("|", "/")[:40] if pd.notna(task_val) and str(task_val).lower() != "nan" else "-"
+            venue_val = r.get(venue_c) if venue_c else None
+            if pd.isna(venue_val) or str(venue_val).lower() == "nan":
+                venue_val = r.get("source")
+            venue = str(venue_val).replace("|", "\\|")[:40] if pd.notna(venue_val) and str(venue_val).lower() != "nan" else "-"
             link = str(r[url_c]) if url_c and pd.notna(r.get(url_c)) else ""
-            link = f"[link]({link})" if link.startswith("http") else ""
+            link = f"[link]({link})" if link.startswith("http") else "-"
             cells = [title, year] + ([task] if task_c else []) + \
                     ([venue] if venue_c else []) + [link]
             lines.append("| " + " | ".join(cells) + " |")

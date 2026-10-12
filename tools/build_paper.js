@@ -207,9 +207,17 @@ function main() {
   // silently shows stale (or contradictory) numbers. That exact drift is what
   // produced the published 0.5768 vs. measured 0.6228 ablation conflict, so the
   // two copies are now written from the same buffer in one step.
+  //
+  // Note: adapt relative paths from paper/ to docs/assets/ context so images and
+  // bibtex resolve correctly on GitHub and GitHub Pages:
+  // - ../results/*.png -> images/*.png (stored in docs/assets/images/)
+  // - ../docs/* -> ../* (e.g. ../references.bib)
   const PAGES_MD = path.join(DOCS_DIR, "assets", "CSE432_Bangla_Sentiment_BERT_Paper.md");
   fs.mkdirSync(path.dirname(PAGES_MD), { recursive: true });
-  fs.writeFileSync(PAGES_MD, doc, "utf8");
+  const docForPages = doc
+    .replace(/\(\.\.\/results\//g, "(images/")
+    .replace(/\(\.\.\/docs\//g, "(../");
+  fs.writeFileSync(PAGES_MD, docForPages, "utf8");
 
   const words = doc.split(/\s+/).length;
   console.log(`[write] ${path.relative(ROOT, OUT_MD)}`);

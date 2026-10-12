@@ -149,7 +149,7 @@ From [`dataset/preprocessed/data_manifest.csv`](preprocessed/data_manifest.csv):
 | `negation_lexicon`| `negation_lexicon.txt` | 178 | `d453b5f3fda0c30753bdb30aef921d0f8e907103d7e101e346b9de3b97c39072` |
 | `stopwords` | `bangla_stopwords.txt` | 12,573 | `bfdc94c204ad6e26f99635529d3c05ccb139fb90b65635427b938a097532bcf1` |
 | `vocab_wellformed`| `wellformed_vocab.txt` | 2,383,465 | `1b26dda73da67b41c806036bccc8a5508d2ba4a9e2e8f3a1bab123f353cd577a` |
-| `lr_table` | `literature_review_table.csv` | 55,619 | `eac3f2e2a4a147c082876361ef93cc3c09b2405f550be4c4c85e8ac5042e3582` |
+| `lr_table` | `literature_review_table.csv` | 53,500 | `699a1702125fabcfbff6d587bf5b91df2ce5da13fb975ff4b538a724c0ae24c9` |
 
 ---
 
