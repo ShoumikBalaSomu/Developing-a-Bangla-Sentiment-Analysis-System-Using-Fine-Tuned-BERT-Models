@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Bangla Sentiment Analysis Using Fine-Tuned BERT | CSE432 NLP Research</title>
-  <meta name="description" content="State-of-the-art Bangla Sentiment Analysis comparing language-specific vs. multilingual BERT models with BanglaGEC grammar mining and negation scope tagging.">
+  <meta name="description" content="CSE432 NLP project: Bangla Sentiment Analysis comparing language-specific vs. multilingual BERT models, with BanglaGEC grammar-rule mining and negation-scope tagging. Includes full empirical results, slice analyses and reproducible Colab notebooks.">
 
   <!-- Google Fonts: Plus Jakarta Sans (UI/Headings) + Inter (Body) + Hind Siliguri (Bangla) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -180,7 +180,7 @@
       <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
         <div class="text-3xl sm:text-4xl font-extrabold font-display text-sky-300">7.07M</div>
         <div class="text-xs uppercase tracking-wider text-slate-400 font-medium mt-1">BanglaGEC Pairs Mined</div>
-        <div class="text-[11px] text-sky-400/90 mt-1">+2.17% Macro-F1 via GEC</div>
+        <div class="text-[11px] text-sky-400/90 mt-1">Rules HURT +2.43pp Macro-F1 (ablation)</div>
       </div>
       <div class="glass-panel p-5 rounded-2xl border border-white/5 text-center">
         <div class="text-3xl sm:text-4xl font-extrabold font-display text-amber-300">0 Leakage</div>
@@ -209,13 +209,16 @@
     </div>
   </section>
 
-  <!-- Section 1: Live Interactive Sentiment Playground -->
+  <!-- Section 1: Rule-based Lexicon Demo (NOT the fine-tuned model) -->
   <section id="demo" class="py-20 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto scroll-mt-20">
     <div class="text-center mb-10">
-      <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Real-Time Evaluation</span>
-      <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Interactive Sentiment Playground</h2>
+      <span class="text-xs font-semibold uppercase tracking-wider text-teal-400">Interactive Demo</span>
+      <h2 class="text-3xl sm:text-4xl font-bold font-display text-white mt-1">Negation-Scope Playground</h2>
       <p class="text-sm text-slate-400 mt-2 max-w-2xl mx-auto">
-        Test Bangla reviews against our fine-tuned model inference engine. Observe how syntactic negator tokens (<code class="text-teal-300">না</code>, <code class="text-teal-300">নয়</code>, <code class="text-teal-300">নেই</code>) invert polarity.
+        A browser-side <strong class="text-slate-200">rule-based lexicon demo</strong> that illustrates how negator tokens (<code class="text-teal-300">না</code>, <code class="text-teal-300">নয়</code>, <code class="text-teal-300">নেই</code>) invert polarity — including the post-verbal Bangla pattern <code class="text-teal-300">ভালো না</code>.
+      </p>
+      <p class="text-xs text-amber-300/90 mt-3 max-w-2xl mx-auto border border-amber-400/30 rounded-xl px-4 py-2.5 bg-amber-400/5">
+        <strong>Not model inference.</strong> This runs a small hand-written lexicon matcher in JavaScript, for demonstration only. It does <em>not</em> load any fine-tuned checkpoint. Real predictions require the trained model — see the Colab notebooks below. The per-model scores shown here are illustrative weighting factors, not measured outputs.
       </p>
     </div>
 
@@ -400,7 +403,8 @@
           <span>Bangla-Specific Advantage</span>
         </div>
         <p class="text-xs text-slate-300 leading-relaxed">
-          BanglaBERT and BanglishBERT outperform multilingual counterparts (mBERT and XLM-RoBERTa) by <strong class="text-white">+2.22 percentage points Macro-F1</strong>, proving monolingual pretraining captures complex morphology better than generic multilingual capacity.
+          BanglaBERT and BanglishBERT outperform multilingual counterparts (mBERT and XLM-RoBERTa) by <strong class="text-white">+2.22 percentage points Macro-F1</strong>, supporting the value of Bangla-specific pretraining over generic multilingual capacity.
+          <span class="block mt-2 text-slate-400">Caveat: the TF-IDF baseline still leads all six models on Macro-F1 (<strong class="text-white">0.6341</strong>), so this gap is a transformer-vs-transformer comparison, not evidence that BERT is the best choice here.</span>
         </p>
       </div>
 
@@ -417,10 +421,11 @@
       <div class="glass-panel p-5 rounded-2xl border border-white/5">
         <div class="flex items-center gap-2 text-amber-300 font-semibold text-xs uppercase tracking-wider mb-2">
           <i data-lucide="layers" class="w-4 h-4"></i>
-          <span>BanglaGEC Ablation Contribution</span>
+          <span>BanglaGEC Ablation — Negative Result</span>
         </div>
         <p class="text-xs text-slate-300 leading-relaxed">
-          Ablation testing confirms that removing BanglaGEC grammar normalisation rules drops test Macro-F1 from <strong class="text-white">0.5985</strong> to <strong class="text-white">0.5768</strong> (-2.17%), demonstrating that error correction measurably improves downstream NLP.
+          Removing the mined grammar rules <em>raises</em> test Macro-F1 from <strong class="text-white">0.5985</strong> to <strong class="text-white">0.6228</strong> (+2.43 pp) — the rules <strong class="text-white">hurt</strong> this task, because <strong class="text-white">51.47%</strong> of them are <code class="text-amber-300">lexical_substitution</code> rewrites that smooth away sentiment-bearing colloquialisms.
+          <span class="block mt-2 text-amber-300/80">⚠️ Not epoch-matched (1 vs 2 epochs), so treat the magnitude as an upper bound. <code class="text-amber-300">APPLY_GRAMMAR_RULES</code> should default to False.</span>
         </p>
       </div>
     </div>
@@ -797,7 +802,18 @@
     lucide.createIcons();
 
     // --------------------------------------------------------------------------
-    // 1. Live Playground Inference Simulator Engine
+    // 1. Rule-based Lexicon Demo (browser-side illustration ONLY)
+    //
+    //    This is NOT model inference. It scores text with small hand-written
+    //    Bangla lexicons plus a negation-window heuristic, to *illustrate* how
+    //    negation scope flips polarity (including the post-verbal Bangla pattern
+    //    "ভালো না"). No checkpoint is loaded and no network call is made.
+    //
+    //    The MODEL_BIAS constants below are illustrative weighting factors only.
+    //    They are NOT derived from the measured test metrics, so switching the
+    //    model pill changes the demo's flavour but does not reproduce any real
+    //    model's behaviour. Real predictions require the fine-tuned checkpoints
+    //    -- see notebooks/02 and notebooks/03.
     // --------------------------------------------------------------------------
     const NEGATORS = new Set([
       "না", "নয়", "নেই", "নাই", "নহে", "নি", "না।", "নয়", "কখনই না", "একেবারেই না"
@@ -813,7 +829,8 @@
       "ফালতু", "বোগাস", "ঠকিয়েছে", "ভুয়া", "ভুয়া", "ত্রুটি", "নষ্ট"
     ]);
 
-    // Model weight bias factors based on empirical evaluations
+    // Illustrative weighting factors for the demo only. NOT measured from the
+    // empirical results -- see the note at the top of this block.
     const MODEL_BIAS = {
       banglabert: { posWeight: 1.05, negWeight: 1.08, codeMixedBonus: 0.95 },
       banglishbert: { posWeight: 1.02, negWeight: 1.04, codeMixedBonus: 1.15 },
