@@ -287,53 +287,17 @@ Full BibTeX entries are in [`references.bib`](../references.bib). Key sources:
 
 ### 3.1 System Overview
 
-```
-                        ┌─────────────────────────────────────────────┐
-                        │            RESOURCE DATASETS                │
-                        │                                             │
-  banglagec ────────────┤  ~7.07M parallel pairs (wrong → right)      │
-                        │           │                                 │
-                        │           ▼                                 │
-                        │   [B] grammar-rule mining (support ≥ 5)     │
-                        │           │                                 │
-                        │           ▼                                 │
-                        │      grammar_rules.csv ──────────┐          │
-                        │                                  │          │
-  bangla-nlp-words ─────┤  stopwords / particles           │          │
-                        │           │                      │          │
-                        │           ▼                      │          │
-                        │   [C] lexicon construction       │          │
-                        │           │                      │          │
-                        │           ▼                      │          │
-                        │  negation_lexicon.txt ─────┐     │          │
-                        │  bangla_stopwords.txt      │     │          │
-                        │                            │     │          │
-  bangla-nlp-catalog ───┤  813 papers / 63 datasets  │     │          │
-                        │           │                │     │          │
-                        │           ▼                │     │          │
-                        │  literature_review_table   │     │          │
-                        └────────────────────────────┼─────┼──────────┘
-                                                     │     │
-                        ┌────────────────────────────┼─────┼──────────┐
-                        │      SUPERVISED SOURCES    ▼     ▼          │
-                        │                                             │
-  revbangla ────────────┤  [D] normalise  →  [E] negation scope tag   │
-  largesentiment ───────┤  [F] label harmonisation → {neg,neu,pos}    │
-  daraz_bd ─────────────┤  [G] length / script filter / dedupe        │
-                        │  [H] stratified split on (label, source)    │
-                        │           │                                 │
-                        │           ▼                                 │
-                        │   train_clean / val_clean / test_clean      │
-                        │           │                                 │
-                        │           ▼                                 │
-                        │   [train] 5 transformers, one recipe        │
-                        │           │                                 │
-                        │           ▼                                 │
-                        │   [evaluate] metrics + 3 slice analyses     │
-                        └─────────────────────────────────────────────┘
-```
+![Figure 3.1: System Architecture and Pipeline Data Flow](images/system_overview.png)
 
-Stage letters correspond to the stage docstrings in `src/preprocess.py` and to the sections of Notebook 01.
+Stage letters correspond to the stage docstrings in `src/preprocess.py` and to the sections of Notebook 01:
+- **[Stage B]** Grammar-rule mining from BanglaGEC (`grammar_rules.csv`)
+- **[Stage C]** Lexicon construction from `bangla-nlp-words` (`negation_lexicon.txt`, `bangla_stopwords.txt`)
+- **[Stage D]** Normalisation & script cleaning (Unicode NFC, punctuation, character collapse)
+- **[Stage E]** Negation scope tagging (`NEG_` prefixing)
+- **[Stage F]** Label harmonisation onto canonical 3-class `{negative, neutral, positive}`
+- **[Stage G]** Text length & deduplication filtering
+- **[Stage H]** Joint `(label, source)` stratified splitting into `train_clean`, `val_clean`, `test_clean`
+- **[Training & Evaluation]** Unified fine-tuning across 5 transformers + baseline, followed by empirical slice analysis
 
 ---
 
