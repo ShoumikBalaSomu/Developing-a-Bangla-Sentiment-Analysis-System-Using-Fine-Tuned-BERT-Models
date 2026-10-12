@@ -1,4 +1,6 @@
 ###CELL md###
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/02_bert_finetuning.ipynb)
+
 # Notebook 02 — BERT Fine-Tuning
 
 **CSE432 — Natural Language Processing**
