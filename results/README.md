@@ -187,6 +187,7 @@ results/
 │   └── metrics_ablation_no_rules.csv           ← BanglaGEC grammar normalisation ablation delta
 │
 ├── 🖼️ Comparative & Distribution Figures:
+│   ├── system_overview.png                     ← System architecture & pipeline data flow diagram
 │   ├── bar_macro_f1.png                        ← Grouped bar chart comparing Macro-F1
 │   ├── bar_accuracy.png                        ← Grouped bar chart comparing Accuracy
 │   └── label_distribution.png                  ← Stratified label distribution across splits
