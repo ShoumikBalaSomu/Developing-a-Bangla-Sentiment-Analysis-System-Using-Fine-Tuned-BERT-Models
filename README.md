@@ -8,7 +8,9 @@
 [![Open in Colab](https://img.shields.io/badge/Google%20Colab-One--Click%20Reproduction-f59e0b?style=for-the-badge&logo=google-colab&logoColor=white)](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb)
 [![Paper .DOCX](https://img.shields.io/badge/Research%20Paper-Google%20Docs%20Format-3b82f6?style=for-the-badge&logo=googledocs&logoColor=white)](https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/raw/main/paper/CSE432_Bangla_Sentiment_BERT_Paper.docx)
 
-> 🚀 **Explore the Live Interactive Website:** Test real-time sentiment predictions, inspect syntactic token negation scope highlighting, and interact with the empirical leaderboard at **[shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models](https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/)**
+> 🚀 **Explore the Interactive Showcase:** inspect the empirical leaderboard, browse all diagnostic figures, and try the **rule-based negation-scope demo** at **[shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models](https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/)**
+>
+> *Note: the on-page playground is a browser-side lexicon demo for illustrating negation scope — it does not run the fine-tuned models. Reproduce real predictions via the Colab notebooks below.*
 
 ---
 
@@ -119,7 +121,7 @@ Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/
 │   ├── binary_metrics.csv                     ← Binary 2-class benchmark metrics (RevBangla comparison)
 │   ├── group_comparison.csv                   ← Language-specific vs. Multilingual pretraining gap (+2.22%)
 │   ├── metrics_baseline.csv                   ← TF-IDF + Logistic Regression reference baseline
-│   ├── metrics_ablation_no_rules.csv          ← Ablation delta without BanglaGEC normalisation (-2.17% F1)
+│   ├── metrics_ablation_no_rules.csv          ← Ablation WITHOUT BanglaGEC rules: F1 0.6228 vs 0.5985 (rules HURT +2.43pp)
 │   ├── bar_macro_f1.png                       ← Comparative Macro-F1 bar chart across all models
 │   ├── bar_accuracy.png                       ← Comparative Accuracy bar chart across all models
 │   ├── label_distribution.png                 ← Stratified label distribution across Train, Val, and Test
@@ -261,7 +263,15 @@ Collapsing `neutral → positive` enables direct comparison against binary bench
 | **Multilingual** (`mbert`, `xlmr`) | 0.5843 | 0.5802 | 79.68% |
 | **Classical** (`tfidf_logreg`) | 0.6341 | 0.6341 | 88.54% |
 
-Language-specific pretraining outperforms multilingual backbones by **+2.22 percentage points Macro-F1** and **+3.32 percentage points Accuracy**, proving the value of dedicated Bangla corpus pretraining.
+Language-specific pretraining outperforms multilingual backbones by **+2.22 percentage points Macro-F1** and **+3.32 percentage points Accuracy**, supporting the value of dedicated Bangla corpus pretraining *within the transformer family*.
+
+> ⚠️ **Important caveat — read before citing this table.** The classical **TF-IDF + Logistic Regression baseline beats every one of the five fine-tuned transformers on Macro-F1 (0.6341 vs. best 0.6065)** and on Accuracy (88.54% vs. best 83.00%). The +2.22 pp gap above is therefore a *transformer-vs-transformer* comparison, not evidence that BERT is the right model for this task.
+>
+> Two effects explain it, and both are discussed honestly in `docs/04_analysis.md`:
+> 1. **The test set has only 21 neutral rows (1.5%).** Every neutral metric is noise — neutral F1 ranges **0.076–0.143** across all six models, and neutral precision is **0.043–0.143**. With a near-binary effective task, a sparse high-dimensional TF-IDF representation has a real advantage.
+> 2. **All five transformers are heavily majority-biased.** Across the transformer family, positive recall is **0.759–0.827** while neutral recall is only **0.238–0.476**; balanced accuracy (**0.642–0.687**) sits far below raw accuracy (**0.773–0.830**). The models are largely predicting the dominant class. *(TF-IDF is excluded from these ranges: its positive recall is 0.901 and accuracy 0.885.)*
+>
+> The defensible headline is therefore **"Bangla-specific pretraining > multilingual pretraining, but neither beats a well-tuned classical baseline on this particular 3-class split with a 1.5% neutral class"** — not "BERT wins".
 
 ---
 
@@ -312,7 +322,9 @@ Language-specific pretraining outperforms multilingual backbones by **+2.22 perc
    - 41+ tokens: **61.11%** accuracy
 
 4. **BanglaGEC Grammar Rules Ablation:**
-   - Training without mined BanglaGEC normalisation rules drops test Macro-F1 from **0.5985** to **0.5768** (-2.17 percentage points), demonstrating that grammar normalisation measurably boosts downstream classification on noisy social text.
+   - Removing the mined grammar rules *raises* test Macro-F1 from **0.5985** to **0.6228** (**+2.43 percentage points**), i.e. the rules **hurt** downstream classification. This is consistent with the rule table being **51.47% `lexical_substitution`** (1,152 of 2,238 rules; §4.2.2) — the mined "corrections" are largely word-choice changes that smooth away the colloquial and dialectal spellings which carry sentiment signal in Bangla e-commerce text.
+   - ⚠️ **Confound:** this comparison is **not** epoch-matched — the no-rules arm trained for 1 epoch while the main arm used 2. It establishes a *direction* worth investigating, not a clean effect size. Re-run both arms at matched epochs before citing it as a contribution (see §"Runs still needed" in `docs/04_analysis.md`).
+   - **Implication for the system:** `APPLY_GRAMMAR_RULES` should default to **False** for sentiment tasks. BanglaGEC still contributes the well-formed vocabulary used for OOV analysis (§4.3).
 
 ---
 

@@ -748,7 +748,11 @@ Notebook 02 §1.3 verifies the accelerator is actually attached before training 
 | Grammar rules **not applied** | 0.6228 | 0.8634 | 0.7198 |
 | **Δ (applied − not applied)** | −0.0243 | −0.0334 | −0.0446 |
 
-*(interpretation guidance)* The ablation yields a negative delta (−0.0243 Macro-F1, −0.0334 Accuracy). In colloquial Bangla e-commerce text, informal and dialectal spellings often carry strong localized sentiment signals. Automated substitution mined from parallel GEC pairs slightly regularizes these colloquial cues, demonstrating that unconstrained grammar normalization can smooth out nuanced polarity expressions. This is an authentic empirical finding highlighting the distinction between grammatical correction and sentiment preservation.
+*(interpretation guidance)* The ablation yields a negative delta (−0.0243 Macro-F1, −0.0334 Accuracy): **removing the grammar rules improves every metric.** In colloquial Bangla e-commerce text, informal and dialectal spellings often carry strong localized sentiment signals. Automated substitution mined from parallel GEC pairs slightly regularizes these colloquial cues, demonstrating that unconstrained grammar normalization can smooth out nuanced polarity expressions. This is an authentic empirical finding highlighting the distinction between grammatical correction and sentiment preservation — and it is consistent with §4.2.2, where `lexical_substitution` dominates at **51.47%** (1,152 of 2,238 rules), exactly the profile §4.2.2 predicts will *harm* classification.
+
+> ⚠️ **Threat to validity — the two arms are not epoch-matched.** The no-rules arm was trained with `--epochs 1` (see `tools/orchestrate_remaining.py`, step 5) while the rules arm used 2 epochs. Data and training budget therefore both differ, so the measured −0.0243 is an **upper bound** on the harm rather than an unbiased effect size. The direction is corroborated by the independent §4.2.2 rule-type evidence, but the magnitude should not be cited until Run 3 below is repeated at matched epochs.
+>
+> **Actionable consequence for the system:** set `APPLY_GRAMMAR_RULES = False` for sentiment tasks. BanglaGEC still contributes to this project through the well-formed vocabulary used for OOV analysis (§4.3), which does not depend on applying the substitution rules.
 
 ---
 
@@ -1104,9 +1108,11 @@ Splits are stratified on `(label, source)` **jointly**, and a leakage check asse
 | Best Bangla-specific model | `banglishbert` (Macro-F1: 0.6065, Acc: 0.8278) | NB03 §3.1 |
 | Best multilingual model | `mbert` (Macro-F1: 0.5843, Acc: 0.7932) | NB03 §3.1 |
 | Macro-F1 gap (signed) | +0.0222 (+2.22 percentage points) | NB03 §3.1 |
-| Verdict | Confirmed: Language-specific pretraining outperforms multilingual transfer | — |
+| Verdict | Confirmed **within the transformer family**: language-specific pretraining outperforms multilingual transfer | — |
 
-*The empirical result confirms the hypothesis: Bangla-specific pretraining (`banglishbert` with 0.6065 macro-F1, `banglabert` with 0.5985 macro-F1) outperforms multilingual pretraining (`mbert` with 0.5843 macro-F1, `xlmr` with 0.5760 macro-F1) by +0.0222 macro-F1 (+2.22 percentage points). Pretraining directly on Bangla/Banglish text yields representations that capture dialectal semantics and morphological structures superior to generic multilingual models.*
+*The empirical result supports the hypothesis within the transformer family: Bangla-specific pretraining (`banglishbert` with 0.6065 macro-F1, `banglabert` with 0.5985 macro-F1) outperforms multilingual pretraining (`mbert` with 0.5843 macro-F1, `xlmr` with 0.5760 macro-F1) by +0.0222 macro-F1 (+2.22 percentage points). Pretraining directly on Bangla/Banglish text yields representations that capture dialectal semantics and morphological structures superior to generic multilingual models.*
+
+> ⚠️ **Scope limit on this verdict.** It compares transformers against transformers only. As §5.2.2 shows, the **TF-IDF + Logistic Regression baseline beats all five of them** (0.6341 macro-F1, 0.8854 accuracy). The correct headline for this project is therefore *"Bangla-specific pretraining beats multilingual pretraining, but neither beats a well-tuned classical baseline on this split"* — **not** *"BERT wins"*. Two factors explain the baseline's advantage and are discussed rather than hidden: the test set contains only **21 neutral rows (1.5%)**, making the task effectively near-binary and collapsing every neutral metric into noise (neutral F1 0.076–0.143); and all five transformers are majority-biased (positive recall 0.759–0.827 against neutral recall 0.238–0.476).
 
 #### 5.2.2 Does the transformer beat the classical baseline?
 

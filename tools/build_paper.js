@@ -201,8 +201,19 @@ function main() {
 
   fs.mkdirSync(PAPER_DIR, { recursive: true });
   fs.writeFileSync(OUT_MD, doc, "utf8");
+
+  // Keep the GitHub Pages copy in sync. This is served to the world from the
+  // gh-pages branch via docs/assets/, so if it drifts from paper/ the live site
+  // silently shows stale (or contradictory) numbers. That exact drift is what
+  // produced the published 0.5768 vs. measured 0.6228 ablation conflict, so the
+  // two copies are now written from the same buffer in one step.
+  const PAGES_MD = path.join(DOCS_DIR, "assets", "CSE432_Bangla_Sentiment_BERT_Paper.md");
+  fs.mkdirSync(path.dirname(PAGES_MD), { recursive: true });
+  fs.writeFileSync(PAGES_MD, doc, "utf8");
+
   const words = doc.split(/\s+/).length;
   console.log(`[write] ${path.relative(ROOT, OUT_MD)}`);
+  console.log(`[write] ${path.relative(ROOT, PAGES_MD)}  (GitHub Pages copy, kept in sync)`);
   console.log(`        ${words.toLocaleString()} words, ` +
               `${doc.split("\n").length.toLocaleString()} lines, ` +
               `${(doc.length / 1024).toFixed(1)} KB`);

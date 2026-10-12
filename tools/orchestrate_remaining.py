@@ -17,7 +17,7 @@ import subprocess
 from pathlib import Path
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from config import ARTIFACTS, CHECKPOINT_DIR, MODELS, RESULTS_DIR, PREPROC_DIR

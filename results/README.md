@@ -76,11 +76,15 @@ To evaluate the contribution of grammar-rule mining from the auxiliary **nahidhu
 
 | Configuration | Test Accuracy | Macro-F1 | Weighted-F1 | MCC | Macro-AUC |
 |---|:---:|:---:|:---:|:---:|:---:|
-| **BanglaBERT (with mined GEC rules)** | **83.00%** | **0.5985** | 0.8553 | 0.6752 | 0.8392 |
-| **BanglaBERT (Ablation: NO GEC rules)** | 86.34% | 0.5768 | 0.8871 | 0.7198 | 0.8579 |
-| **Net Contribution of GEC Rules** | — | **+0.0217 (+2.17%)** | — | — | — |
+| **BanglaBERT (with mined GEC rules)** | 83.00% | 0.5985 | 0.8553 | 0.6752 | 0.8392 |
+| **BanglaBERT (Ablation: NO GEC rules)** | **86.34%** | **0.6228** | **0.8871** | **0.7198** | **0.8579** |
+| **Net Contribution of GEC Rules** | −3.34 pp | **−0.0243 (−2.43 pp)** | −0.0318 | −0.0446 | −0.0187 |
 
-*Key finding:* Grammar normalisation rules mined from BanglaGEC boost Macro-F1 by **+2.17%**, proving that resolving phonetic misspellings directly aids minority-class representation.
+*Key finding:* Grammar normalisation rules mined from BanglaGEC **hurt** this task: removing them *improves* Macro-F1 by **+2.43 pp** and Accuracy by **+3.34 pp**, and improves every metric in the row. This is a genuine negative result, not a pipeline bug — §4.2.2 of `docs/04_analysis.md` shows the mined table is **51.47% `lexical_substitution`** (1,152 of 2,238 rules), i.e. mostly word-choice rewrites rather than typo fixes. Applying them regularises the colloquial and dialectal spellings that carry polarity signal in Bangla e-commerce text, exactly the failure mode §4.2.2 predicted for a `lexical_substitution`-dominant table.
+
+> ⚠️ **Known confound — do not cite this as a clean effect size.** The no-rules arm was trained for **1 epoch** while the rules arm used **2 epochs** (see `tools/orchestrate_remaining.py`, which passes `--epochs 1` to the ablation run). The two arms therefore differ in *both* data and training budget, so the measured −2.43 pp is an upper bound on the harm, not an unbiased estimate. Re-run both arms at matched epochs (Run 3 in `docs/04_analysis.md` §"Runs still needed") before treating the number as final.
+>
+> **Actionable consequence:** `APPLY_GRAMMAR_RULES` should default to **False** for sentiment classification. BanglaGEC remains useful in this project for the well-formed vocabulary used in OOV analysis (§4.3), which does not depend on applying the substitution rules.
 
 *Source file:* [`metrics_ablation_no_rules.csv`](metrics_ablation_no_rules.csv)
 
