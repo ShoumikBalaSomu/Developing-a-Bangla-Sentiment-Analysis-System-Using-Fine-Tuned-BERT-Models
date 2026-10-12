@@ -8,22 +8,22 @@
 
 | Title | Year | Task | Venue | Link |
 |---|---|---|---|---|
-| nan | 2025 | sentiment | nan | [link](https://data.mendeley.com/datasets/j7yb2sv263/1) |
-| nan | 2025 | sentiment | nan | [link](https://data.mendeley.com/datasets/7tn76wdhsr/1) |
-| nan | 2024 | sentiment | nan | [link](https://github.com/GoswamiDhiman/EmoMix-3L) |
-| nan | 2024 | sentiment | nan | [link](https://huggingface.co/datasets/aplycaebous/BnSentMix) |
-| nan | 2024 | sentiment | nan | [link](https://github.com/mukaffi28/bengali-political-sentiment-analysis) |
-| nan | 2023 | sentiment | nan | [link](https://github.com/LanguageTechnologyLab/SentMix-3L) |
-| nan | 2023 | ser | nan | [link](https://data.mendeley.com/datasets/rdwn4bs5ky/2) |
-| nan | 2023 | ser | nan | [link](https://data.mendeley.com/datasets/vsn37ps3rx/4) |
-| nan | 2023 | sentiment | nan | [link](https://github.com/mohsinulkabir14/BanglaBook) |
-| nan | 2022 | ser | nan | [link](https://data.mendeley.com/datasets/t9h6p943xy/5) |
+| BABSA | 2025 | sentiment | BABSA (Data in Brief 2026) | [link](https://data.mendeley.com/datasets/j7yb2sv263/1) |
+| BanglaSarc3 | 2025 | sentiment | BanglaSarc3 (Data in Brief 2025) | [link](https://data.mendeley.com/datasets/7tn76wdhsr/1) |
+| EmoMix-3L | 2024 | sentiment | EmoMix-3L (WILDRE 2024) | [link](https://github.com/GoswamiDhiman/EmoMix-3L) |
+| BnSentMix | 2024 | sentiment | BnSentMix (LoResLM 2025) | [link](https://huggingface.co/datasets/aplycaebous/BnSentMix) |
+| Motamot | 2024 | sentiment | Motamot (2024) | [link](https://github.com/mukaffi28/bengali-political-sentiment-analysis) |
+| SentMix-3L | 2023 | sentiment | SentMix-3L (SEALP 2023) | [link](https://github.com/LanguageTechnologyLab/SentMix-3L) |
+| BANSpEmo | 2023 | ser | Sultana et al. / Mendeley Data | [link](https://data.mendeley.com/datasets/rdwn4bs5ky/2) |
+| KBES (KUET Bangla Emotional Speech) | 2023 | ser | KBES (Data in Brief 2023) | [link](https://data.mendeley.com/datasets/vsn37ps3rx/4) |
+| BanglaBook | 2023 | sentiment | BanglaBook (Findings ACL 2023) | [link](https://github.com/mohsinulkabir14/BanglaBook) |
+| BanglaSER | 2022 | ser | BanglaSER (Data in Brief 2022) | [link](https://data.mendeley.com/datasets/t9h6p943xy/5) |
 
 ### Model (1)
 
 | Title | Year | Task | Venue | Link |
 |---|---|---|---|---|
-| nan |  | nan | nan | [link](https://huggingface.co/csebuetnlp/banglabert) |
+| csebuetnlp/banglabert | - | - | - | [link](https://huggingface.co/csebuetnlp/banglabert) |
 
 ### Paper (150)
 
@@ -44,5 +44,5 @@
 
 | Title | Year | Task | Venue | Link |
 |---|---|---|---|---|
-| nan |  | nan | nan | [link](https://github.com/Foysal87/sbnltk) |
+| sbnltk | - | - | - | [link](https://github.com/Foysal87/sbnltk) |
 
