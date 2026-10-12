@@ -128,7 +128,7 @@ See [`README.md`](README.md#4-directory-layout--generated-artifacts) §Output sc
 
 | Issue | Effect | Mitigation present | Residual risk |
 |---|---|---|---|
-| E-commerce and social-media domains only | Performance on news, political or literary Bangla is unmeasured | Stated in `docs/05_conclusion.md` L8 | Should not be assumed to transfer |
+| E-commerce and social-media domains only | Performance on news, political or literary Bangla is unmeasured | Stated in [`../docs/05_conclusion.md`](../docs/05_conclusion.md) §5.2 (L8) | Should not be assumed to transfer |
 | Star-rating label noise | Depresses all models roughly equally | Label smoothing; noise share estimated in error analysis | Cannot be removed without re-annotation |
 | Positive-skewed sources | Majority class dominates | 60% cap + inverse-frequency class weights | Accuracy not comparable to uncapped prior work |
 | Regional dialects absent | Chittagong, Sylhet, Noakhali, Mymensingh Bangla not represented | Listed as future work (ANUBHUTI corpus) | System will underperform on dialect text |
@@ -175,6 +175,6 @@ Each source dataset remains under the licence published by its host. Check the l
 | Re-run preprocessing | `python src/preprocess.py` |
 | Mine grammar rules only | Notebook 01 §5.1 |
 | Regenerate the literature-review table | `python src/catalog_to_lr.py --top 40` |
-| Verify reproducibility | compare `data_manifest.csv` SHA-256 values against those recorded in `docs/04_analysis.md` §4.9 |
+| Verify reproducibility | compare `data_manifest.csv` SHA-256 values against those recorded in [`../docs/04_analysis.md`](../docs/04_analysis.md#49-reproducibility-record) §4.9 |
 
 If an upstream Kaggle dataset changes schema, `src/preprocess.py` resolves columns through ordered candidate lists with substring fallback, and skips an unresolvable source with a printed warning rather than aborting. Add the new column spelling to `TEXT_COL_CANDIDATES` or `LABEL_COL_CANDIDATES` in `src/config.py` to support it explicitly.
