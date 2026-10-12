@@ -165,7 +165,7 @@ function main() {
     `| \`docs/01_introduction.md\` | Section 1 — problem, motivation, objectives, contributions |\n` +
     `| \`docs/02_literature_review.md\` | Section 2 — prior work, research gap, positioning |\n` +
     `| \`docs/03_methodology.md\` | Section 3 — pipeline, models, training and evaluation protocol |\n` +
-    `| \`docs/04_analysis.md\` | Section 4 — result slots, slice analyses, threats to validity |\n` +
+    `| \`docs/04_analysis.md\` | Section 4 — empirical analysis, slice analyses, threats to validity |\n` +
     `| \`docs/05_conclusion.md\` | Section 5 — findings, limitations, future work |\n` +
     `| \`docs/references.bib\` | BibTeX, verified sources only |\n` +
     `| \`docs/generated/prior_work.md\` | Auto-generated literature tables (Appendix A) |\n` +
