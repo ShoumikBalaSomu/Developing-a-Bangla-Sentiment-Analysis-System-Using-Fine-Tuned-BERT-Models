@@ -18,7 +18,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-BAD_STRINGS = ["0.5768", "+2.17", "-2.17", "2.17%"]
+BAD_STRINGS = [
+    "0.5768",
+    "+2.17",
+    "-2.17",
+    "2.17%",
+    "qwen-agent",
+    "lUinoenfmc",
+    "Local folder location",
+    "Local Folder Location",
+    "D:\\Documents",
+]
 GOOD_STRINGS = ["0.6228", "2.43", "negative delta"]
 
 TARGETS = [

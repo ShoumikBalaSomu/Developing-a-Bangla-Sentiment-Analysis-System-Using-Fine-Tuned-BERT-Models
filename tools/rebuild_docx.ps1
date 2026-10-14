@@ -8,17 +8,16 @@
 #
 # Usage (from anywhere):
 #   powershell -NoProfile -ExecutionPolicy Bypass -File tools\rebuild_docx.ps1
-#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\rebuild_docx.ps1 -Converter "D:\path\to\md2docx.js"
+#   powershell -NoProfile -ExecutionPolicy Bypass -File tools\rebuild_docx.ps1 -Converter "tools\md2docx.js"
 #
-# Requires: Node.js, and the `docx` skill's md2docx.js converter with its
-# dependencies installed (npm install in the skill directory).
+# Requires: Node.js, and a Markdown-to-DOCX converter (or Pandoc).
 
 param(
     # Node executable. Override if `node` is not on PATH.
     [string]$Node = "node",
 
-    # Path to the md2docx.js converter from the docx skill.
-    [string]$Converter = "$env:LOCALAPPDATA\Qianwen\User Data\qwen-agent\lUinoenfmc\skills\docx\scripts\md2docx.js",
+    # Path to the md2docx.js converter script.
+    [string]$Converter = "tools\md2docx.js",
 
     # Document title used for the Word title page and running header.
     [string]$Title = "Developing a Bangla Sentiment Analysis System Using Fine-Tuned BERT Models"

@@ -161,7 +161,7 @@ function main() {
 
   parts.push(`\n\n---\n\n## Appendix B — Repository Manifest\n\n` +
     `| Path | Contents |\n|---|---|\n` +
-    `| \`README.md\` | Colab buttons, dataset roles, contributor table, local folder location |\n` +
+    `| \`README.md\` | Colab buttons, dataset roles, contributor table, replication guide |\n` +
     `| \`docs/01_introduction.md\` | Section 1 — problem, motivation, objectives, contributions |\n` +
     `| \`docs/02_literature_review.md\` | Section 2 — prior work, research gap, positioning |\n` +
     `| \`docs/03_methodology.md\` | Section 3 — pipeline, models, training and evaluation protocol |\n` +
@@ -185,9 +185,9 @@ function main() {
     `| \`tools/notebooks/*.cells.md\` | Editable cell sources for the notebooks |\n` +
     `| \`requirements.txt\` | Pinned dependency lower bounds |\n` +
     `| \`LICENSE\` | MIT for code; datasets remain under their original licences |\n\n` +
-    `### Local folder location\n\n` +
-    `This repository is located on the local PC at:\n\n` +
-    `\`\`\`\nD:\\Documents\\qwen-agent\\lUinoenfmc\\default\\Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models\n\`\`\`\n`);
+    `### Repository URL\n\n` +
+    `The complete source code, preprocessed data manifests, and diagnostic figures are maintained on GitHub at:\n\n` +
+    `<https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models>\n`);
 
   const doc = parts.join("\n") + "\n";
 

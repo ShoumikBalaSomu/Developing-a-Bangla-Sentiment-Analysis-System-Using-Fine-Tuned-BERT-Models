@@ -62,6 +62,7 @@ SECRET_PATTERNS: list[tuple[str, re.Pattern]] = [
     ("OpenSSH / RSA Private Key", re.compile(r"-----BEGIN (?:RSA|OPENSSH|DSA|EC|PGP)?\s*PRIVATE KEY-----")),
     ("Slack API Token", re.compile(r"\bxox[baprs]-[0-9a-zA-Z]{10,48}\b")),
     ("OpenAI API Key", re.compile(r"\bsk-(?:proj-)?[A-Za-z0-9_-]{32,}\b")),
+    ("Workstation Agent Path Leak", re.compile(r"(?:qwen-agent[/\\]lUinoenfmc|D:[/\\]Documents[/\\]qwen-agent)")),
 ]
 
 

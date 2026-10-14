@@ -395,16 +395,6 @@ Both authors reviewed the methodology and the final paper.
 
 ---
 
-## Local Folder Location
-
-This repository is located on the local PC at:
-
-```
-D:\Documents\qwen-agent\lUinoenfmc\default\Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models
-```
-
----
-
 ## License
 
 Code: MIT (see [`LICENSE`](LICENSE)). Datasets remain under the licenses of their original Kaggle / Hugging Face hosts.
