@@ -175,6 +175,26 @@ class TestEvaluationRegression(unittest.TestCase):
             self.assertAlmostEqual(neu_sup, EXPECTED_SUPPORT["neutral"], places=1)
             self.assertAlmostEqual(pos_sup, EXPECTED_SUPPORT["positive"], places=1)
 
+    def test_ablation_macro_f1_baseline(self):
+        """Validate BanglaGEC ablation baseline without grammar rules matches reported empirical metrics."""
+        self.assertTrue(
+            ABLATION_FILE.exists(),
+            f"Ablation metrics file missing at {ABLATION_FILE}",
+        )
+        ablation_records = {}
+        with open(ABLATION_FILE, mode="r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                ablation_records[row["model"]] = {
+                    k: float(v) for k, v in row.items() if k != "model" and v != "" and v is not None
+                }
+        self.assertIn("banglabert_no_rules", ablation_records)
+        metrics = ablation_records["banglabert_no_rules"]
+        # Expected: macro_f1 = 0.6228, accuracy = 0.8634, mcc = 0.7198
+        self.assertAlmostEqual(metrics["macro_f1"], 0.6228, delta=TOLERANCE)
+        self.assertAlmostEqual(metrics["accuracy"], 0.8634, delta=TOLERANCE)
+        self.assertAlmostEqual(metrics["mcc"], 0.7198, delta=TOLERANCE)
+
 
 if __name__ == "__main__":
     unittest.main()
