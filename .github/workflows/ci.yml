@@ -1,0 +1,42 @@
+name: CI Quality & Regression Gates
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-and-verify:
+    name: Verify Quality, Regression & Security Gates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Zero-Secret & OWASP Artifact Sanitizer Gate
+        run: |
+          python tools/sanitize_artifacts.py
+
+      - name: Run Data Integrity & Evaluation Regression Test Suite
+        run: |
+          python -m unittest discover tests -v
+
+      - name: Verify Notebook Build Consistency
+        run: |
+          node tools/build_notebooks.js --check
+
+      - name: Verify Publication Docx Integrity
+        run: |
+          python tools/verify_docx.py
