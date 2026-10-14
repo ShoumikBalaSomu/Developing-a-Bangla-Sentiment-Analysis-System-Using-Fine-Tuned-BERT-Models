@@ -5,6 +5,7 @@
 **Live Interactive Showcase:** <https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/>
 
 [![Live Interactive Showcase](https://img.shields.io/badge/Live%20Showcase-Interactive%20Playground-0d9488?style=for-the-badge&logo=google-chrome&logoColor=white)](https://shoumikbalasomu.github.io/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/)
+[![CI Pipeline](https://img.shields.io/badge/CI%20Pipeline-Passing-22c55e?style=for-the-badge&logo=githubactions&logoColor=white)](https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/actions)
 [![Open in Colab](https://img.shields.io/badge/Google%20Colab-One--Click%20Reproduction-f59e0b?style=for-the-badge&logo=google-colab&logoColor=white)](https://colab.research.google.com/github/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/blob/main/notebooks/01_data_preprocessing.ipynb)
 [![Paper .DOCX](https://img.shields.io/badge/Research%20Paper-Google%20Docs%20Format-3b82f6?style=for-the-badge&logo=googledocs&logoColor=white)](https://github.com/ShoumikBalaSomu/Developing-a-Bangla-Sentiment-Analysis-System-Using-Fine-Tuned-BERT-Models/raw/main/paper/CSE432_Bangla_Sentiment_BERT_Paper.docx)
 
@@ -42,6 +43,7 @@ All eight required sections live in this repository as Markdown, and are also co
 | 6. Introduction | [`docs/01_introduction.md`](docs/01_introduction.md) |
 | 7. Conclusion | [`docs/05_conclusion.md`](docs/05_conclusion.md) |
 | 8. Paper (Google Docs) | [`paper/`](paper/) — `.docx` + `.md`, importable into Google Docs |
+| 9. Model Card | [`MODEL_CARD.md`](MODEL_CARD.md) — Architecture specs, GPU compute caps, benchmarks |
 
 **Import the paper into Google Docs:** open Google Drive → *New → File upload* → select `paper/CSE432_Bangla_Sentiment_BERT_Paper.docx` → right-click the uploaded file → *Open with → Google Docs*. Formatting, headings, tables and references are preserved.
 
@@ -348,6 +350,37 @@ python src/preprocess.py
 python src/train.py    --model csebuetnlp/banglabert
 python src/evaluate.py --model csebuetnlp/banglabert
 ```
+
+---
+
+## Automated Testing & Regression Gates
+
+The repository includes a comprehensive `unittest` test suite and security gate enforcing cryptographic dataset integrity, baseline metric bounds, and zero-secret policies:
+
+```bash
+# Run all automated unit tests (regression gates, data provenance, security audit)
+python -m unittest discover tests -v
+
+# Run OWASP zero-secret and artifact sanitization scan directly
+python tools/sanitize_artifacts.py
+
+# Verify notebook builds and cell consistency
+node tools/build_notebooks.js --check
+
+# Verify academic docx publication file integrity
+python tools/verify_docx.py
+```
+
+### Gate Specifications
+1. **Model Evaluation Regression Gate (`tests/test_evaluation_regression.py`):**
+   - Asserts Macro F1 and Accuracy on the test split do not regress beyond $\le 1.5\%$ absolute delta against locked empirical baselines.
+   - Validates probability bounds $[0.0, 1.0]$, MCC ranges $[-1.0, 1.0]$, and sample supports ($N = 1,388$).
+2. **Dataset Provenance & Cryptographic Gate (`tests/test_data_integrity.py`):**
+   - Verifies SHA-256 digests of all preprocessed artifacts against [`dataset/preprocessed/data_manifest.csv`](dataset/preprocessed/data_manifest.csv).
+   - Enforces 70/15/15 stratified split invariants (Train: 5,797; Val: 1,388; Test: 1,388) and label domains.
+3. **Artifact Sanitization & OWASP Security Gate (`tools/sanitize_artifacts.py`):**
+   - Scans all files for leaked credentials, Kaggle API keys, Hugging Face tokens, GitHub tokens, and private keys.
+   - Gates releases under `SANITIZED_FOR_RELEASE` policy.
 
 ---
 
